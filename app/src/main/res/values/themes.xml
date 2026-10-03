@@ -1,0 +1,15 @@
+<resources>
+    <style name="Theme.WonderPlay" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#0C0E0D</item>
+        <item name="android:colorAccent">#EAE4CD</item>
+    </style>
+    <style name="Theme.WonderPlay.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0C0E0D</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_brand</item>
+        <item name="postSplashScreenTheme">@style/Theme.WonderPlay</item>
+    </style>
+</resources>
