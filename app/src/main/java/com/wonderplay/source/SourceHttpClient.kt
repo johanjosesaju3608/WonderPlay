@@ -6,11 +6,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import org.json.JSONObject
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType.Companion.toMediaType
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 
-internal class SourceHttpClient(private val client: OkHttpClient = sharedClient) {
+class SourceHttpClient(private val client: OkHttpClient = sharedClient) {
     suspend fun json(url: HttpUrl): JSONObject = withContext(Dispatchers.IO) {
         execute(Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT).build()).use { response ->
             requireSuccess(response)
@@ -24,6 +26,19 @@ internal class SourceHttpClient(private val client: OkHttpClient = sharedClient)
             }
         }
     }
+    suspend fun text(url: HttpUrl, body: JSONObject? = null): String? = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url(url).header("Accept", "application/json").header("User-Agent", USER_AGENT)
+        if (body != null) request.post(body.toString().toRequestBody("application/json".toMediaType()))
+        execute(request.build()).use { response ->
+            if (response.code == 404) return@withContext null
+            requireSuccess(response)
+            val source = response.body?.source() ?: throw IOException("Empty response")
+            source.request(MAX_JSON_BYTES + 1)
+            if (source.buffer.size > MAX_JSON_BYTES) throw IOException("Response too large")
+            source.readUtf8()
+        }
+    }
+    suspend fun jsonOrNull(url: HttpUrl): JSONObject? = text(url)?.let(::JSONObject)
     suspend fun imageBytes(url: HttpUrl): ByteArray = withContext(Dispatchers.IO) {
         execute(Request.Builder().url(url).header("User-Agent", USER_AGENT).build()).use { response ->
             requireSuccess(response)

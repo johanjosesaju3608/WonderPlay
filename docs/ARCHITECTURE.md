@@ -19,7 +19,7 @@ Room stores metadata, ordered playlist membership, favorites, history, local fil
 
 ## Source boundary
 
-MusicSource exposes search, track/artist/album/playlist metadata, playback resolution and related tracks. AudiusSource only accepts public, non-gated, streamable music. The local source handles user-selected URIs. YouTubeMusicSource uses NewPipe Extractor for YouTube Music song search and public audio resolution. YouTube Music is the default; Audius is selectable in Settings. There is no account or paid-content access.
+MusicSource exposes search, track/artist/album/playlist metadata, playback resolution and related tracks. The local source handles user-selected URIs. YouTubeMusicSource uses NewPipe Extractor for YouTube Music song search and public audio resolution. YouTube Music is the remote catalog. FeaturedPlaylists parses anonymous home-feed playlist endpoints. LyricsRepository cancels stale requests, caches up to 40 successful lookups in memory, and uses LRCLIB with lyrics.ovh fallback. There is no account or paid-content access.
 
 ## Artwork and metadata
 

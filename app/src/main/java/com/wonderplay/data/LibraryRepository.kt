@@ -33,7 +33,7 @@ class LibraryRepository(
             theme = runCatching { ThemeMode.valueOf(values[Keys.theme].orEmpty()) }.getOrDefault(ThemeMode.DARK),
             haptics = values[Keys.haptics] ?: true, reducedMotion = values[Keys.reducedMotion] ?: false,
             wifiOnly = values[Keys.wifiOnly] ?: false, highQuality = values[Keys.highQuality] ?: true,
-            albumColors = values[Keys.albumColors] ?: false,
+            albumColors = true,
             searchSource = runCatching { SearchSource.valueOf(values[Keys.searchSource].orEmpty()) }.getOrDefault(SearchSource.YOUTUBE),
         )
     }.distinctUntilChanged()

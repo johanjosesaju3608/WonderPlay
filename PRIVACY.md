@@ -11,11 +11,13 @@ Library data is private app storage. Android cloud backup is disabled. Clearing 
 
 ## Network requests
 
-- Audius discovery endpoints (`api.audius.co` and discovered Audius network nodes): search text, track/artist/playlist identifiers, public track metadata, and streaming requests. Public media URLs may redirect to Audius-operated storage hosts.
 - Artwork hosts returned by the public provider: requests for cover images displayed in the app.
 - MusicBrainz (`musicbrainz.org`), where canonical artwork matching is requested: normalized artist/song text. Lookups are bounded and rate limited.
 - Cover Art Archive (`coverartarchive.org`, potentially redirecting to `archive.org` infrastructure): release IDs and cover image requests after a metadata match.
-- YouTube/Google (`music.youtube.com`, `youtube.com`, Google video/image hosts): selected searches, track identifiers, public player metadata and audio requests via NewPipe Extractor. External service links remain available.
+- YouTube/Google (`music.youtube.com`, `youtube.com`, Google video/image hosts): featured-playlist requests, selected searches, track identifiers, public player metadata and audio requests via NewPipe Extractor. External service links remain available.
+
+- LRCLIB (`lrclib.net`): song title, artist, album and duration for synced/plain lyrics lookup.
+- lyrics.ovh (`api.lyrics.ovh`): artist and song title when LRCLIB has no usable match. Lyrics are cached only in memory (up to 40 tracks). External lyrics search opens the browser with title and artist.
 
 These providers receive ordinary HTTP information, including the user's IP address. wonderPlay adds no persistent device identifier. Third-party providers have independent policies and availability. Search does not use any remote AI model.
 
@@ -23,7 +25,7 @@ These providers receive ordinary HTTP information, including the user's IP addre
 
 Only publicly streamable, non-gated source audio is accepted. No login credentials, source access tokens, payment access, DRM keys are collected or implemented. NewPipe resolves public YouTube audio; the app does not unlock restricted content.
 
-Wi-Fi-only restrictions are enforced for remote playback. Browsing/search and artwork requests still use the available connection. They are not an app-wide firewall. Local files remain playable without networking.
+Wi-Fi-only restrictions are enforced for remote playback. Browsing/search, lyrics and artwork requests still use the available connection. They are not an app-wide firewall. Local files remain playable without networking.
 
 ## Permissions
 

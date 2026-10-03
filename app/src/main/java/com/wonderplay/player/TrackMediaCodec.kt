@@ -30,7 +30,7 @@ internal object TrackMediaCodec {
             id = json.getString("id"), title = json.optString("title", "Untitled"),
             artist = json.optString("artist", "Unknown artist"), album = json.optString("album"),
             artworkUrl = optional("artworkUrl"), durationMs = json.optLong("durationMs"),
-            source = json.optString("source", "audius"), sourceId = json.optString("sourceId"),
+            source = json.optString("source", "youtube"), sourceId = json.optString("sourceId"),
             streamUrl = optional("streamUrl"), artistId = optional("artistId"),
             albumId = optional("albumId"), year = optional("year"), genre = optional("genre"),
             explicit = json.optBoolean("explicit"), permalink = optional("permalink"),
@@ -44,7 +44,7 @@ internal object TrackMediaCodec {
         return MediaItem.Builder().setMediaId(occurrenceId).setUri(uri)
             .setMediaMetadata(MediaMetadata.Builder()
                 .setTitle(track.title).setArtist(track.artist).setAlbumTitle(track.album)
-                .setArtworkUri(track.artworkUrl?.let(Uri::parse))
+                .setArtworkUri(track.artworkUrl?.let { com.wonderplay.metadata.ArtworkUrls.forSize(it, 1024) }?.let(Uri::parse))
                 .setIsPlayable(true).setIsBrowsable(false)
                 .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                 .setExtras(Bundle().apply { putString(EXTRA_TRACK, raw) }).build())

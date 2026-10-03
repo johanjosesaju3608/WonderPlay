@@ -6,19 +6,26 @@ A quiet, open-source Android music player with real streaming, a local-first lib
 
 ## Install
 
-Download **wonderPlay-1.0.2.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+Download **wonderPlay-1.0.3.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+
+## New in 1.0.3
+
+- Four-line synced lyrics preview beneath the expanded player's controls. Tap to open full-screen lyrics, follow playback, seek by tapping a line, or browse with following switched off.
+- LRCLIB exact lookup and conservative title/artist/duration matching, with lyrics.ovh fallback for plain lyrics. Missing lyrics show provider availability status, retry and an external web search; no claim that lyrics do not exist anywhere.
+- Live, region-aware YouTube Music featured playlists on Home, with refresh and playlist opening.
+- High-resolution cover URLs supplied to Android media metadata; dynamic album colors are automatic. Audius has been removed.
+- Samsung Now Bar and Vivo Origin Island remain controlled by device firmware. Standard MediaSession playback and artwork are exposed; no physical Vivo device was available to verify Origin Island.
 
 ## Music sources
 
-- **Audius:** full-track streaming from publicly available creator uploads. Restricted, deleted and gated entries are excluded. This independent catalog is different from YouTube Music; a particular commercial recording may not be available.
 - **Your files:** choose audio through Android’s file picker. The app retains read access without uploading or copying audio files. Local playback works offline.
 - **YouTube Music (default):** song search and in-app public audio playback through NewPipe Extractor. No account integration or paid-content access. Restricted tracks and upstream changes can affect availability. The original service can also be opened externally.
 
-The app is independent and unaffiliated with Audius, YouTube, Google, Apple or Spotify. Upstream availability is not guaranteed. No provider API key or login is required.
+The app is independent and unaffiliated with YouTube, Google, Apple or Spotify. Upstream availability is not guaranteed. No provider API key or login is required.
 
 ## Features
 
-- Dark, light and system appearance; Coffee or Album colors, readable cover-based accents and player gradients, tactile controls and reduced-motion settings.
+- Dark, light and system appearance; automatic album colors, readable cover-based accents and player gradients, tactile controls and reduced-motion settings.
 - Cancellable, debounced search with local music ranking and duplicate filtering. Results render before artwork loads.
 - Media3 foreground playback, lock-screen/notification/headset controls, audio focus and unplug handling.
 - Persistent mini-player with four-way swipes: up to expand, down to stop/clear, right for previous and left for next. Queue boundaries fade the bar without restarting playback.
@@ -74,7 +81,7 @@ A manual CI workflow template is in `docs/ci/android.yml`. The currently availab
 | Package | Responsibility |
 | --- | --- |
 | `domain` | Provider-independent models and contracts |
-| `source` | YouTube Music / NewPipe, Audius HTTP parsing and selected-file import |
+| `source` | YouTube Music / NewPipe, featured playlists, lyrics and selected-file import |
 | `metadata` | Normalization, deterministic ranking, duplicate handling, artwork fallback |
 | `data` | Room transactions, saved queue and DataStore preferences |
 | `player` | Service-owned ExoPlayer, MediaSession, reactive controller, queue and stream resolution |
@@ -84,17 +91,17 @@ The foreground service owns audio; activity recreation does not create another p
 
 ## Privacy
 
-Library metadata and settings stay in private app storage; Android cloud backup is disabled. YouTube/Google or Audius receives search/track/stream requests according to the selected catalog. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
+Library metadata and settings stay in private app storage; Android cloud backup is disabled. YouTube/Google receives search/track/stream and featured-playlist requests. LRCLIB and lyrics.ovh receive song metadata for lyrics lookup. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
 
 ## Validation and limits
 
 See [docs/QA.md](docs/QA.md) for executed checks. Galaxy S25-specific haptics, Bluetooth routing, battery behavior and 120 Hz frame pacing require physical-device testing; emulator results do not certify them.
 
-The player streams the source’s available representation without transcoding. No lossless, crossfade or normalization claim is made. Artist/collection views currently load up to 100 tracks. Metadata completeness and artwork availability vary. Remote music needs a connection; Wi-Fi-only applies to playback, not all search/artwork traffic.
+The player streams the source’s available representation without transcoding. No lossless, crossfade or normalization claim is made. Featured playlists load up to five pages (usually 500 tracks); larger lists explicitly identify the loaded subset. Artist views depend on available search results. Metadata completeness and artwork availability vary. Remote music needs a connection; Wi-Fi-only applies to playback, not all search/artwork traffic.
 
 ## Troubleshooting
 
-- **No search match:** try another title or change between YouTube Music and Audius in Settings.
+- **No search match:** try another title or artist.
 - **Playback unavailable:** check your connection and Wi-Fi-only preference, then retry. Restricted or removed tracks cannot be unlocked by the client.
 - **Local file inaccessible:** reselect a moved/deleted file or renew its document-provider access.
 - **Samsung background interruptions:** check the app’s battery/background restrictions in Android settings.

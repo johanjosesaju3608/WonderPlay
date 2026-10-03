@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import coil3.imageLoader
 import com.wonderplay.domain.*
 import com.wonderplay.player.PlayerController
+import com.wonderplay.source.LyricsRepository
+import com.wonderplay.source.LyricsState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,6 +28,9 @@ data class UiState(
     val collection: MusicCollection? = null,
     val artist: Artist? = null,
     val detailLoading: Boolean = false,
+    val featured: List<MusicCollection> = emptyList(),
+    val featuredLoading: Boolean = false,
+    val featuredError: String? = null,
     val message: String? = null,
 )
 
@@ -42,6 +47,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val localTracks = library.localTracks.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val playlists = library.playlists.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val recentSearches = library.recentSearches.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private val lyricsRepository = LyricsRepository()
+    private val mutableLyrics = MutableStateFlow(LyricsState())
+    val lyrics = mutableLyrics.asStateFlow()
+    private var lyricsJob: Job? = null
+    private var featuredJob: Job? = null
     private var searchJob: Job? = null
     private var detailJob: Job? = null
     private var searchGeneration = 0
@@ -49,7 +59,42 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         player.connect()
-        viewModelScope.launch { settings.map { it.searchSource }.distinctUntilChanged().drop(1).collect { if (mutableUi.value.query.isNotBlank()) retrySearch() } }
+        loadFeatured()
+        viewModelScope.launch {
+            player.state.map { it.current }.distinctUntilChangedBy { it?.id }.collect { track ->
+                lyricsJob?.cancel()
+                mutableLyrics.value = LyricsState(track?.id)
+                if (track != null) loadLyrics(track)
+            }
+        }
+    }
+
+    fun retryLyrics() { player.state.value.current?.let(::loadLyrics) }
+    private fun loadLyrics(track: Track) {
+        lyricsJob?.cancel()
+        mutableLyrics.value = LyricsState(track.id, loading = true)
+        lyricsJob = viewModelScope.launch {
+            val result = lyricsRepository.find(track)
+            if (player.state.value.current?.id == track.id) mutableLyrics.value = result
+        }
+    }
+    fun loadFeatured() {
+        if (featuredJob?.isActive == true) return
+        mutableUi.update { it.copy(featuredLoading = true, featuredError = null) }
+        featuredJob = viewModelScope.launch {
+            try { val lists = sources.featuredPlaylists(); mutableUi.update { it.copy(featured = lists, featuredLoading = false) } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { mutableUi.update { it.copy(featuredLoading = false, featuredError = "Couldn't load featured playlists. Check your connection and retry.") } }
+        }
+    }
+    fun openPlaylist(list: MusicCollection) {
+        detailJob?.cancel()
+        mutableUi.update { it.copy(collection = null, artist = null, detailLoading = true) }
+        detailJob = viewModelScope.launch {
+            try { val full = sources.getPlaylist(list.id); mutableUi.update { it.copy(collection = full.copy(title = list.title, subtitle = list.subtitle + if(full.subtitle.startsWith("First ")) " · ${full.subtitle}" else "", artworkUrl = full.artworkUrl ?: list.artworkUrl), detailLoading = false) } }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { mutableUi.update { it.copy(detailLoading = false, message = "Couldn't open this playlist. Try again.") } }
+        }
     }
 
     fun search(query: String) {

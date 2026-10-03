@@ -1,29 +1,23 @@
-# wonderPlay 1.0.2 validation
+# wonderPlay 1.0.3 validation
 
-Validated on 2026-10-03 with JDK 17, Gradle 8.13 and an Android 15 / API 35 ARM64 emulator.
+- 28 unit tests passed: metadata/ranking, queue state, Room persistence, expansion bounds, dynamic-color contrast, high-resolution artwork URLs, system artwork metadata, lyric parsing/timing/matching and featured playlist/song parsing.
+- 9 Android 15 emulator tests passed: playback/seek/pause/error recovery, library/settings/search flows, mini-player gestures, repeated expansion/recreation, four-line lyrics preview/full-screen opening, lyric-line seeking, plain lyrics and unavailable-lyrics states.
+- Debug and release lint passed. Signed release APK passed signature and 16 KB alignment checks.
+- Signed 1.0.3 installed successfully over the published 1.0.2 APK using the unchanged release key.
+- Live signed-release checks: regional featured playlists loaded; a playlist opened with canonical song titles/artists and 100 tracks; song search, expanded player, LRCLIB synced preview and full-screen lyrics worked. YouTube audio played after retrying an upstream HTML-instead-of-JSON response. Android reported the wonderPlay media session active and PLAYING with advancing position/buffering.
 
-- 24 unit tests cover metadata/ranking, queue state, Room transactions, settings persistence, Audius and YouTube identities, expansion bounds and album-color contrast.
-- Debug and release lint pass without errors; debug, instrumentation and minified signed release APKs build successfully.
-- Five emulator tests cover actual local audio decoding/seek/pause/error/recovery, navigation, search recreation, color preference persistence, and five local mini-player expansion/collapse cycles followed by activity recreation.
-- Live YouTube Music search returned mainstream recordings; in-app audio playback reported PLAYING with an advancing position.
-- The signed 1.0.2 APK successfully updated an installed 1.0.1 APK.
-- The signed release player was visually inspected with a real YouTube Music track, including the album-derived gradient and accents.
-- Release signing uses the same certificate as 1.0.0. APK signing and ZIP/16 KB alignment checks pass.
+## Lyrics
 
-## Artwork, branding and gestures
+LRCLIB exact lookup is followed by title/artist/duration-checked search, then lyrics.ovh plain-lyrics fallback. Requests are cancellable when the track changes and successful results are cached only in memory, bounded to 40 tracks. LRC tests cover fractions, repeated stamps, offset tags, intros, backward seeking and invalid timestamps. Synced previews have four fixed rows. Full-screen lyrics follow playback, allow tapping a timestamped line to seek and support disabling following for manual browsing. Reduce motion disables transitions and animated following. Plain lyrics are labelled unsynced.
 
-Google-hosted YouTube Music covers request display-appropriate pixels (up to 1024), including old saved 120-pixel URLs, with fallback to the original URL on failure. A live request returned a 1024×1024 image. The app uses a transparent vector symbol instead of a boxed bitmap; launcher foreground inset increased from 17% to 20%.
+Unavailable results identify the available sources, not the entire internet. Provider failures are distinguished from confirmed missing responses. Retry and an external web-search button remain available. No lyrics are bundled in source/APK assets.
 
-The whole mini-player accepts upward expansion, downward stop/queue dismissal, rightward previous and leftward next gestures. Actual playback tests verify both boundary swipes preserve an advanced playback position and playing state, navigation in both directions, expansion and clearing the queue. Clearing Now Playing removes its artwork input to the dynamic theme, restoring Coffee.
+## System media controls
 
-## Existing crash and buffering changes
+MediaSession receives the high-resolution (up to 1024 pixels) cover URL rather than the original 120-pixel Google thumbnail. Media3 decodes and shares artwork within Android's device-specific bitmap limits. The release exposes an active standard MediaSession, metadata, audio attributes and a MediaStyle notification. No physical Samsung or Vivo device was available for this release. In particular, Vivo Origin Island recognition has not been verified or claimed fixed; firmware-specific eligibility is outside emulator coverage.
 
-Expansion spring values are clamped to 0–1 before driving padding, sizing and opacity. This prevents invalid negative padding during overshoot. The full-screen blurred artwork layer has been replaced by a cover-colored gradient. The emulator expansion regression passes; the original user's device crash trace was not available, so physical-device confirmation remains necessary.
+## Limits
 
-Audio buffering now targets 30–120 seconds, retaining the short 700 ms initial-play threshold and using 3 seconds before resuming after a stall. Stream transfers have bounded retries; unavailable source resolutions and missing local files report errors without exhausting those retries. A live Audius endpoint check took about 21 seconds and returned HTTP 522 from its upstream media host. Better buffering cannot eliminate that provider outage.
+Featured playlists use the anonymous YouTube Music regional home feed and music playlist metadata. Lists are bounded to five pages and larger lists identify the loaded subset. No account sync or personalized signed-in feed is implemented. YouTube, LRCLIB and lyrics.ovh availability and upstream response changes can affect requests. Missing artwork uses the existing theme fallback. Dynamic colors are automatic and Audius is no longer a supported provider; saved library metadata is retained.
 
-## Boundaries
-
-No physical Galaxy S25 was available. Samsung background restrictions, Bluetooth routing, haptic feel, battery consumption and 120 Hz pacing need physical-device testing. Document-provider behavior varies.
-
-YouTube Music is the default song-search catalog, using NewPipe Extractor for public audio. There is no account sync or paid-content access. Audius is optional in Settings; local files remain offline-capable. No offline remote downloads, lossless guarantee, trained neural recommendation model, crossfade or loudness normalization is shipped. Upstream changes and region restrictions can affect public playback.
+Wi-Fi-only applies to remote playback, not browsing, lyrics or artwork. No remote offline downloads, lossless guarantee, crossfade or loudness normalization is shipped. Physical-device Origin Island/Now Bar appearance, Bluetooth routes, haptics, battery behavior and refresh-rate performance require device testing.

@@ -14,17 +14,15 @@ import java.io.File
 import java.security.MessageDigest
 
 class SourceRegistry(private val context: Context, private val library: LibraryStore) {
-    private val audius = AudiusSource()
     private val youtube = YouTubeMusicSource()
     private val artwork = ArtworkResolver()
     suspend fun search(query: String, offset: Int = 0): SearchResult {
         val local=if(offset==0) library.localTracks.first().filter { (it.title+" "+it.artist).contains(query,true) } else emptyList()
-        return try { val provider = if (library.settings.first().searchSource == SearchSource.YOUTUBE) youtube else audius; val remote=provider.search(query,offset); remote.copy(tracks=local+remote.tracks) }
+        return try { val remote=youtube.search(query,offset); remote.copy(tracks=local+remote.tracks) }
         catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
         catch (failure: SourceException) { if(local.isNotEmpty()) SearchResult(local) else throw failure }
     }
     suspend fun resolvePlayback(track: Track): PlaybackSource = when(track.source) {
-        "audius" -> audius.resolvePlayback(track)
         "youtube" -> youtube.resolvePlayback(track)
         "local" -> withContext(Dispatchers.IO) {
             val uri=Uri.parse(track.streamUrl ?: throw SourceException("Choose this audio file again."))
@@ -41,16 +39,16 @@ class SourceRegistry(private val context: Context, private val library: LibraryS
     }
     suspend fun getArtist(track: Track): Artist {
         if(track.source=="youtube") return youtube.getArtist(track.artist)
-        if(track.source=="audius" && !track.artistId.isNullOrBlank()) return audius.getArtist(track.artistId)
         val tracks=stored().filter { it.artist.equals(track.artist,true) }
         return Artist(track.artist,track.artist,track.artworkUrl,tracks.ifEmpty { listOf(track) })
     }
     suspend fun getAlbum(track: Track): MusicCollection {
-        if(track.source=="audius" && !track.albumId.isNullOrBlank()) return audius.getAlbum(track.albumId)
         val tracks=stored().filter { track.album.isNotBlank() && it.album==track.album && it.artist==track.artist }.ifEmpty { listOf(track) }
         return MusicCollection(track.albumId ?: track.id,track.album.ifBlank { track.title },track.artist,track.artworkUrl,tracks,track.year)
     }
-    suspend fun getRelatedTracks(track: Track): List<Track> = if(track.source=="audius") audius.getRelatedTracks(track) else stored().filter { it.artist==track.artist && it.id!=track.id }
+    suspend fun getRelatedTracks(track: Track): List<Track> = stored().filter { it.artist==track.artist && it.id!=track.id }
+    suspend fun featuredPlaylists() = FeaturedPlaylists().load()
+    suspend fun getPlaylist(id: String) = FeaturedPlaylists().open(id)
     private suspend fun stored() = (library.favorites.first()+library.history.first()+library.localTracks.first()+library.playlists.first().flatMap { it.tracks }).distinctBy { it.id }
     suspend fun enrichArtwork(track: Track): Track = if(track.artworkUrl!=null || track.source=="local") track else track.copy(artworkUrl=artwork.resolve(track))
     fun clearMetadataCache() = artwork.clear()

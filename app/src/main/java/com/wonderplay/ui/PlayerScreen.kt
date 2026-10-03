@@ -116,9 +116,10 @@ internal fun PlayerSurface(state:PlayerState,vm:AppViewModel,expanded:Boolean,on
                         if(state.phase in listOf(PlaybackPhase.RESOLVING,PlaybackPhase.BUFFERING)) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
                         state.error?.let { Text(it,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error);TextButton(onClick=vm.player::retry) { Text("Retry playback") } }
                         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                            Text(if(current.source=="local") "ON YOUR DEVICE" else "${if(current.source=="youtube") "YOUTUBE MUSIC" else "AUDIUS"} · ${state.qualityLabel.uppercase()}",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.weight(1f))
+                            Text(if(current.source=="local") "ON YOUR DEVICE" else "YOUTUBE MUSIC · ${state.qualityLabel.uppercase()}",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.weight(1f))
                             TactileIcon(Icons.Rounded.QueueMusic,"Open queue",onQueue)
                         }
+                        LyricsPanel(vm, state)
                     }
                 }
             }

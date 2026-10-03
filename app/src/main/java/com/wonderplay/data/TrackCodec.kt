@@ -21,7 +21,7 @@ internal object TrackCodec {
             id = json.getString("id"), title = json.optString("title", "Untitled"),
             artist = json.optString("artist", "Unknown artist"), album = json.optString("album"),
             artworkUrl = optional("artworkUrl"), durationMs = json.optLong("durationMs").coerceAtLeast(0),
-            source = json.optString("source", "audius"), sourceId = json.getString("sourceId"),
+            source = json.optString("source", "youtube"), sourceId = json.getString("sourceId"),
             streamUrl = optional("streamUrl"), artistId = optional("artistId"), albumId = optional("albumId"),
             year = optional("year"), genre = optional("genre"), explicit = json.optBoolean("explicit"),
             permalink = optional("permalink"),

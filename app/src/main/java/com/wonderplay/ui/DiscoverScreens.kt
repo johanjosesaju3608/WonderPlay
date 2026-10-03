@@ -26,12 +26,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wonderplay.AppViewModel
 import com.wonderplay.domain.Track
 
 @Composable
 internal fun HomeScreen(vm: AppViewModel, history: List<Track>, favorites: List<Track>, local: List<Track>, onSearch: () -> Unit,
     onImport: () -> Unit, onSettings: () -> Unit, onLibrary: (String) -> Unit, onMenu: (Track) -> Unit, currentId: String?) {
+    val home by vm.ui.collectAsStateWithLifecycle()
     LazyColumn(contentPadding = PaddingValues(bottom = 32.dp)) {
         item {
             Row(Modifier.fillMaxWidth().padding(start = Space.page, end = 12.dp, top = 10.dp, bottom = 18.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -49,6 +51,20 @@ internal fun HomeScreen(vm: AppViewModel, history: List<Track>, favorites: List<
                 Text(if (history.isEmpty()) "Find a favorite artist. Discover a new song. Make a little room for listening." else "A familiar favorite, or something you haven’t heard yet. Settle in.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.widthIn(max = 340.dp))
                 PrimaryAction("Find your next listen", Icons.Rounded.Search, Modifier.padding(top = 24.dp), onSearch)
+            }
+        }
+        item { SectionHeading("Featured playlists", "From YouTube Music", "Refresh", vm::loadFeatured) }
+        if (home.featuredLoading && home.featured.isEmpty()) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = Space.page)) }
+        home.featuredError?.let { error -> item { FailureState(error, vm::loadFeatured) } }
+        if (home.featured.isNotEmpty()) item {
+            LazyRow(contentPadding = PaddingValues(horizontal = Space.page, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                items(home.featured, key = { it.id }) { list ->
+                    Column(Modifier.width(160.dp).clickable { vm.openPlaylist(list) }) {
+                        Artwork(Track("playlist:${list.id}", list.title, "YouTube Music", artworkUrl = list.artworkUrl), Modifier.size(160.dp).clip(Shape.artwork), "Open ${list.title}")
+                        Text(list.title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 10.dp))
+                        Text(list.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
             }
         }
         if (history.isNotEmpty()) {
@@ -126,7 +142,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                 if (recent.isNotEmpty()) {
                     item { Spacer(Modifier.height(12.dp)); SectionHeading("Recent searches", action = "Clear", onAction = vm::clearSearches) }
                     items(recent, key = { it }) { term -> ActionRow(Icons.Rounded.History, term) { vm.search(term) } }
-                } else item { EmptyState("Follow your curiosity", "Search YouTube Music or choose Audius in Settings. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
+                } else item { EmptyState("Follow your curiosity", "Search YouTube Music. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
             } else {
                 if (tracks.isNotEmpty()) {
                     item { Text("${tracks.size}${if (hasMore) "+" else ""} TRACKS", style = MaterialTheme.typography.labelSmall,
@@ -136,7 +152,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                         current = track.id == currentId, favorite = favorites.any { it.id == track.id }) }
                 }
                 if (error != null) item { FailureState(error, vm::retrySearch) }
-                else if (!searching && tracks.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre. You can change the catalog in Settings.", Icons.Rounded.SearchOff) }
+                else if (!searching && tracks.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre.", Icons.Rounded.SearchOff) }
                 if (hasMore && !searching && error == null) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { QuietAction("More tracks", Icons.Rounded.Add, onClick = vm::loadMore) } }
                 item {
                     Column(Modifier.padding(horizontal = Space.page, vertical = 22.dp)) {

@@ -100,7 +100,7 @@ internal fun WonderTheme(settings: AppSettings, artwork: String? = null, content
     }
     CompositionLocalProvider(LocalReducedMotion provides settings.reducedMotion) {
         val base = if (dark) Dark else Light
-        val accent = albumAccent(artwork, settings.albumColors, dark)
+        val accent = albumAccent(artwork, true, dark)
         val container = androidx.compose.ui.graphics.lerp(base.surface, accent, if(dark) .18f else .12f)
         val scheme = base.copy(primary=accent, primaryContainer=container, onPrimaryContainer=accent, secondary=accent)
         CompositionLocalProvider(LocalPlayerGradient provides listOf(container, base.surface)) {

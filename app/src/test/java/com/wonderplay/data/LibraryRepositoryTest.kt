@@ -30,10 +30,10 @@ class LibraryRepositoryTest {
     @After fun close(){scope.cancel();db.close()}
     @Test fun themeAndCatalogPreferencesPersistWithoutChangingLibrary()= runBlocking {
         val defaults=repo.settings.first()
-        assertFalse(defaults.albumColors)
+        assertTrue(defaults.albumColors)
         assertEquals(com.wonderplay.domain.SearchSource.YOUTUBE,defaults.searchSource)
         repo.toggleFavorite(one)
-        val changed=defaults.copy(albumColors=true,searchSource=com.wonderplay.domain.SearchSource.AUDIUS)
+        val changed=defaults.copy(reducedMotion=true)
         repo.updateSettings(changed)
         assertEquals(changed,repo.settings.first())
         assertEquals(one,repo.favorites.first().single())

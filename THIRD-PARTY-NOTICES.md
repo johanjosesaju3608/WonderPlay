@@ -23,7 +23,7 @@ Original wonderPlay source is MIT licensed (see LICENSE). The combined applicati
 | Hamcrest (tests only) | BSD-3-Clause | https://github.com/hamcrest/JavaHamcrest |
 | AndroidX Test / Espresso (tests only) | Apache-2.0 | https://github.com/android/android-test |
 
-Audius's HTTP API is consumed directly; no Audius SDK or music files are bundled. MusicBrainz/Cover Art Archive metadata and artwork remain governed by their respective licenses and artwork owners' rights. Attribution does not imply endorsement or grant additional music redistribution rights.
+LRCLIB and lyrics.ovh public APIs provide lyrics at runtime; no song lyrics are bundled. MusicBrainz/Cover Art Archive metadata and artwork remain governed by their respective licenses and artwork owners' rights. Attribution does not imply endorsement or grant additional music redistribution rights.
 
 Apache License 2.0 text: https://www.apache.org/licenses/LICENSE-2.0
 Eclipse Public License 1.0 text: https://www.eclipse.org/legal/epl-v10.html
