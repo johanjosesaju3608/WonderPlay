@@ -1,6 +1,6 @@
 # wonderPlay
 
-An independent, open-source Android music player under development. **wonderPlay is the app name; VEYRA was only the working project name.**
+An independent, open-source Android music player under development.
 
 > **Incomplete development checkpoint — not a working release.**
 > The project does not currently compile. No APK has been generated or published, and no test suite has passed. This checkpoint preserves the work completed so far without presenting it as a finished application.
