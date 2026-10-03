@@ -1,3 +1,1 @@
-<inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="17%">
-    <bitmap android:src="@drawable/wonderplay_logo" android:gravity="fill" />
-</inset>
+<inset xmlns:android="http://schemas.android.com/apk/res/android" android:inset="20%" android:drawable="@drawable/ic_brand" />

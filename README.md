@@ -1,12 +1,12 @@
 # wonderPlay
 
-<img src="docs/branding/wonderplay-logo.png" alt="wonderPlay logo" width="160" />
+<img src="docs/branding/wonderplay-logo.svg" alt="wonderPlay logo" width="160" />
 
 A quiet, open-source Android music player with real streaming, a local-first library, and a persistent background player. No account wall, advertising SDK, analytics or cloud inference.
 
 ## Install
 
-Download **wonderPlay-1.0.1.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+Download **wonderPlay-1.0.2.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
 
 ## Music sources
 
@@ -21,7 +21,8 @@ The app is independent and unaffiliated with Audius, YouTube, Google, Apple or S
 - Dark, light and system appearance; Coffee or Album colors, readable cover-based accents and player gradients, tactile controls and reduced-motion settings.
 - Cancellable, debounced search with local music ranking and duplicate filtering. Results render before artwork loads.
 - Media3 foreground playback, lock-screen/notification/headset controls, audio focus and unplug handling.
-- Persistent mini-player, expanding Now Playing, scrubbing, previous/next, shuffle, repeat, queue reorder/removal and retry.
+- Persistent mini-player with four-way swipes: up to expand, down to stop/clear, right for previous and left for next. Queue boundaries fade the bar without restarting playback.
+- Expanding Now Playing, scrubbing, shuffle, repeat, queue reorder/removal and retry.
 - Room-backed favorites, history and playlists with create/rename/delete, add/remove and ordering controls.
 - Artist/album details from provider metadata, plus albums/artists drawn from your actual library.
 - Selected-file import, embedded artwork, offline library metadata, Wi-Fi-only streaming preference, and cache/history clearing.

@@ -112,8 +112,8 @@ internal fun WonderTheme(settings: AppSettings, artwork: String? = null, content
 /** The supplied wonderPlay identity remains coffee on black in both appearance modes. */
 @Composable
 internal fun WonderMark(modifier: Modifier = Modifier, color: Color = Coffee) {
-    androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(com.wonderplay.R.drawable.wonderplay_logo),
-        contentDescription="wonderPlay logo", modifier=modifier, contentScale=androidx.compose.ui.layout.ContentScale.Fit)
+    Icon(androidx.compose.ui.res.painterResource(com.wonderplay.R.drawable.ic_brand),
+        contentDescription="wonderPlay logo", modifier=modifier, tint=color)
 }
 
 @Composable

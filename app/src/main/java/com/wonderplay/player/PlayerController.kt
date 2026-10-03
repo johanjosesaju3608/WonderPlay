@@ -56,6 +56,13 @@ class PlayerController(private val context:Context, @Suppress("UNUSED_PARAMETER"
     fun seekTo(positionMs:Long) = command { it.seekTo(positionMs.coerceAtLeast(0).let { value -> if(it.duration>0) value.coerceAtMost(it.duration) else value }) }
     fun next() = command { if(it.hasNextMediaItem()) { it.seekToNextMediaItem(); it.prepare(); it.play() } }
     fun previous() = command { if(it.currentPosition>3000 || !it.hasPreviousMediaItem()) it.seekTo(0) else it.seekToPreviousMediaItem() }
+    /** Gesture navigation never restarts the current track at a queue boundary. */
+    fun skipFromGesture(previous:Boolean,onUnavailable:()->Unit) = command {
+        if(if(previous) it.hasPreviousMediaItem() else it.hasNextMediaItem()) {
+            if(previous) it.seekToPreviousMediaItem() else it.seekToNextMediaItem()
+            it.prepare()
+        } else onUnavailable()
+    }
     fun setShuffle(enabled:Boolean) = command { it.shuffleModeEnabled=enabled }
     fun setRepeat(mode:RepeatMode) = command { it.repeatMode=when(mode) { RepeatMode.OFF->Player.REPEAT_MODE_OFF; RepeatMode.ALL->Player.REPEAT_MODE_ALL; RepeatMode.ONE->Player.REPEAT_MODE_ONE } }
     fun addNext(track:Track) = command { it.addMediaItem(if(it.mediaItemCount==0) 0 else it.currentMediaItemIndex+1,TrackMediaCodec.item(track)) }

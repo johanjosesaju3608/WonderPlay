@@ -1,6 +1,7 @@
 package com.wonderplay.ui
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -31,6 +32,8 @@ import androidx.compose.ui.unit.lerp
 import com.wonderplay.AppViewModel
 import com.wonderplay.domain.*
 import kotlin.math.abs
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,21 +43,37 @@ internal fun PlayerSurface(state:PlayerState,vm:AppViewModel,expanded:Boolean,on
     val haptics=LocalWonderHaptics.current
     val animatedFraction by animateFloatAsState(if(expanded) 1f else 0f,if(reduced) tween(0) else spring(dampingRatio=.88f,stiffness=420f),label="player expansion")
     val fraction = playerLayoutFraction(animatedFraction)
+    val scope=rememberCoroutineScope()
+    val boundaryFade=remember { Animatable(1f) }
+    val threshold=with(LocalDensity.current) { 48.dp.toPx() }
+    fun pulse() { scope.launch { boundaryFade.animateTo(.2f,tween(if(reduced) 0 else 100)); boundaryFade.animateTo(1f,tween(if(reduced) 0 else 180)) } }
+    val miniGesture = if(expanded) Modifier else Modifier.pointerInput(haptics,reduced,threshold) {
+        var dx=0f; var dy=0f
+        detectDragGestures(onDragStart={dx=0f;dy=0f},onDragEnd={
+            when(miniPlayerGesture(dx,dy,threshold)) {
+                MiniPlayerGesture.EXPAND -> { haptics.perform(HapticEvent.SELECT);onExpanded(true) }
+                MiniPlayerGesture.DISMISS -> { haptics.perform(HapticEvent.DISMISS);onExpanded(false);vm.player.clearQueue() }
+                MiniPlayerGesture.PREVIOUS -> {haptics.perform(HapticEvent.SKIP);vm.player.skipFromGesture(true,::pulse)}
+                MiniPlayerGesture.NEXT -> {haptics.perform(HapticEvent.SKIP);vm.player.skipFromGesture(false,::pulse)}
+                MiniPlayerGesture.NONE -> Unit
+            }
+        }) { change,drag -> change.consume();dx+=drag.x;dy+=drag.y }
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width=maxWidth; val height=maxHeight
         val artSize=lerp(50.dp,minOf(width-48.dp,height*.39f),fraction)
         Surface(Modifier.align(Alignment.BottomCenter).padding(bottom=lerp(72.dp,0.dp,fraction),start=lerp(12.dp,0.dp,fraction),end=lerp(12.dp,0.dp,fraction))
-            .fillMaxWidth().height(lerp(72.dp,height,fraction)),shape=Shape.panel,color=MaterialTheme.colorScheme.surfaceContainer,tonalElevation=0.dp) {
+            .fillMaxWidth().height(lerp(72.dp,height,fraction)).alpha(boundaryFade.value).testTag(if(expanded) "Expanded player" else "Mini player").then(miniGesture),shape=Shape.panel,color=MaterialTheme.colorScheme.surfaceContainer,tonalElevation=0.dp) {
             Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(LocalPlayerGradient.current))) {
                 val artModifier=Modifier.offset(x=lerp(10.dp,(width-artSize)/2,fraction),y=lerp(10.dp,64.dp,fraction)).size(artSize)
                 Crossfade(current,modifier=artModifier,animationSpec=tween(if(reduced) 0 else 220),label="cover") { track ->
                     var dx by remember { mutableFloatStateOf(0f) }; var dy by remember { mutableFloatStateOf(0f) }
-                    Artwork(track,Modifier.fillMaxSize().pointerInput(expanded) {
+                    Artwork(track,Modifier.fillMaxSize().then(if(!expanded) Modifier else Modifier.pointerInput(expanded) {
                         detectDragGestures(onDragStart={dx=0f;dy=0f},onDragCancel={dx=0f;dy=0f},onDragEnd={
                             if(expanded) when { dy>90 && dy>abs(dx)->onExpanded(false); dx < -100 -> {haptics.perform(HapticEvent.SKIP);vm.player.next()}; dx>100 -> {haptics.perform(HapticEvent.SKIP);vm.player.previous()} }
                             else if(dy < -50) onExpanded(true)
                         }) { change,drag -> change.consume();dx+=drag.x;dy+=drag.y }
-                    },description="Artwork for ${track.title}")
+                    }),description="Artwork for ${track.title}")
                 }
                 if(fraction<.5f) Row(Modifier.fillMaxSize().clickable(enabled=!expanded) { haptics.perform(HapticEvent.SELECT);onExpanded(true) }.padding(start=72.dp,end=8.dp).alpha(1-fraction*2),verticalAlignment=Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) { Text(current.title,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.titleSmall); Text(current.artist,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall) }
