@@ -16,7 +16,12 @@ class AppFlowTest {
         compose.onNodeWithText(playlistName).assertIsDisplayed()
         compose.onNodeWithText("Home",useUnmergedTree=true).performClick()
         compose.onNodeWithContentDescription("Settings").performClick()
-        compose.onNodeWithText("Reduce motion").assertIsDisplayed()
+        compose.onNodeWithText("Album colors").assertIsDisplayed()
+        compose.onNodeWithText("Coffee").performClick()
+        compose.onNodeWithText("Album colors").performClick()
+        compose.waitUntil(5000){compose.onAllNodes(isSelected()).fetchSemanticsNodes().any { it.config.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.Text) { emptyList() }.any { t -> t.text=="Album colors" } }}
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("Album colors").assertIsSelected()
     }
     @Test fun searchFocusClearAndRotate() {
         compose.onNodeWithText("Search",useUnmergedTree=true).performClick()

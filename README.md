@@ -1,22 +1,24 @@
 # wonderPlay
 
+<img src="docs/branding/wonderplay-logo.png" alt="wonderPlay logo" width="160" />
+
 A quiet, open-source Android music player with real streaming, a local-first library, and a persistent background player. No account wall, advertising SDK, analytics or cloud inference.
 
 ## Install
 
-Download **wonderPlay-1.0.0.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+Download **wonderPlay-1.0.1.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
 
 ## Music sources
 
 - **Audius:** full-track streaming from publicly available creator uploads. Restricted, deleted and gated entries are excluded. This independent catalog is different from YouTube Music; a particular commercial recording may not be available.
 - **Your files:** choose audio through Android’s file picker. The app retains read access without uploading or copying audio files. Local playback works offline.
-- **YouTube Music:** an explicit search handoff opens its app or website. YouTube audio is not extracted or played inside wonderPlay.
+- **YouTube Music (default):** song search and in-app public audio playback through NewPipe Extractor. No account integration or paid-content access. Restricted tracks and upstream changes can affect availability. The original service can also be opened externally.
 
 The app is independent and unaffiliated with Audius, YouTube, Google, Apple or Spotify. Upstream availability is not guaranteed. No provider API key or login is required.
 
 ## Features
 
-- Dark, light and system appearance; restrained artwork atmosphere, tactile controls and reduced-motion settings.
+- Dark, light and system appearance; Coffee or Album colors, readable cover-based accents and player gradients, tactile controls and reduced-motion settings.
 - Cancellable, debounced search with local music ranking and duplicate filtering. Results render before artwork loads.
 - Media3 foreground playback, lock-screen/notification/headset controls, audio focus and unplug handling.
 - Persistent mini-player, expanding Now Playing, scrubbing, previous/next, shuffle, repeat, queue reorder/removal and retry.
@@ -71,7 +73,7 @@ A manual CI workflow template is in `docs/ci/android.yml`. The currently availab
 | Package | Responsibility |
 | --- | --- |
 | `domain` | Provider-independent models and contracts |
-| `source` | Audius HTTP parsing/routing and selected-file import |
+| `source` | YouTube Music / NewPipe, Audius HTTP parsing and selected-file import |
 | `metadata` | Normalization, deterministic ranking, duplicate handling, artwork fallback |
 | `data` | Room transactions, saved queue and DataStore preferences |
 | `player` | Service-owned ExoPlayer, MediaSession, reactive controller, queue and stream resolution |
@@ -81,7 +83,7 @@ The foreground service owns audio; activity recreation does not create another p
 
 ## Privacy
 
-Library metadata and settings stay in private app storage; Android cloud backup is disabled. Audius receives search/track requests. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
+Library metadata and settings stay in private app storage; Android cloud backup is disabled. YouTube/Google or Audius receives search/track/stream requests according to the selected catalog. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
 
 ## Validation and limits
 
@@ -91,7 +93,7 @@ The player streams the source’s available representation without transcoding. 
 
 ## Troubleshooting
 
-- **No search match:** try music available on Audius or import your own file. The search does not use YouTube’s catalog.
+- **No search match:** try another title or change between YouTube Music and Audius in Settings.
 - **Playback unavailable:** check your connection and Wi-Fi-only preference, then retry. Restricted or removed tracks cannot be unlocked by the client.
 - **Local file inaccessible:** reselect a moved/deleted file or renew its document-provider access.
 - **Samsung background interruptions:** check the app’s battery/background restrictions in Android settings.
@@ -99,4 +101,4 @@ The player streams the source’s available representation without transcoding. 
 
 ## License
 
-Original app code and vector artwork: [MIT](LICENSE). Music and cover artwork remain owned by their respective rights holders. Dependency notices and bundled license texts are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the app’s settings.
+Original app code: [MIT](LICENSE). The combined app is distributed under [GPL-3.0-or-later](LICENSE-GPL-3.0), including NewPipe Extractor. Music and cover artwork remain owned by their respective rights holders. Dependency notices and bundled license texts are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the app’s settings.

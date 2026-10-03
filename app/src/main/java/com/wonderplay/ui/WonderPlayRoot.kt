@@ -59,7 +59,7 @@ fun WonderPlayRoot(viewModel:AppViewModel) {
     BackHandler(enabled=expanded || showSettings || detail!=null || ui.detailLoading || libraryRoute!="all" || tab!="Home") {
         when { expanded -> expanded=false; showSettings -> showSettings=false; detail!=null || ui.detailLoading -> { collection=null; vm.closeDetail() }; libraryRoute!="all" -> libraryRoute="all"; else -> tab="Home" }
     }
-    WonderTheme(settings) {
+    WonderTheme(settings, player.current?.artworkUrl) {
         CompositionLocalProvider(LocalWonderHaptics provides haptics) {
             Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
                 Box(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {

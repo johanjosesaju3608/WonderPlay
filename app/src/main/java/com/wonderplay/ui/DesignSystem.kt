@@ -85,7 +85,7 @@ private val WonderTypography = Typography(
 )
 
 @Composable
-internal fun WonderTheme(settings: AppSettings, content: @Composable () -> Unit) {
+internal fun WonderTheme(settings: AppSettings, artwork: String? = null, content: @Composable () -> Unit) {
     val dark = when (settings.theme) { ThemeMode.DARK -> true; ThemeMode.LIGHT -> false; ThemeMode.SYSTEM -> isSystemInDarkTheme() }
     val view = androidx.compose.ui.platform.LocalView.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -99,23 +99,21 @@ internal fun WonderTheme(settings: AppSettings, content: @Composable () -> Unit)
         }
     }
     CompositionLocalProvider(LocalReducedMotion provides settings.reducedMotion) {
-        MaterialTheme(colorScheme = if (dark) Dark else Light, typography = WonderTypography, content = content)
+        val base = if (dark) Dark else Light
+        val accent = albumAccent(artwork, settings.albumColors, dark)
+        val container = androidx.compose.ui.graphics.lerp(base.surface, accent, if(dark) .18f else .12f)
+        val scheme = base.copy(primary=accent, primaryContainer=container, onPrimaryContainer=accent, secondary=accent)
+        CompositionLocalProvider(LocalPlayerGradient provides listOf(container, base.surface)) {
+            MaterialTheme(colorScheme = scheme, typography = WonderTypography, content = content)
+        }
     }
 }
 
-/** A compact original identity: two counterposed wave folds. */
+/** The supplied wonderPlay identity remains coffee on black in both appearance modes. */
 @Composable
-internal fun WonderMark(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
-    Canvas(modifier) {
-        val w = size.width; val h = size.height
-        val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w * .08f, h * .22f)
-            cubicTo(w * .3f, h * .18f, w * .16f, h * .82f, w * .40f, h * .78f)
-            cubicTo(w * .63f, h * .74f, w * .40f, h * .26f, w * .65f, h * .22f)
-            cubicTo(w * .89f, h * .18f, w * .78f, h * .80f, w * .96f, h * .78f)
-        }
-        drawPath(path, color, style = Stroke(width = w * .075f, cap = StrokeCap.Round))
-    }
+internal fun WonderMark(modifier: Modifier = Modifier, color: Color = Coffee) {
+    androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(com.wonderplay.R.drawable.wonderplay_logo),
+        contentDescription="wonderPlay logo", modifier=modifier, contentScale=androidx.compose.ui.layout.ContentScale.Fit)
 }
 
 @Composable

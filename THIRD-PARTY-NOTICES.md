@@ -1,9 +1,15 @@
 # Third-party notices
 
-Original wonderPlay source and vector identity are MIT licensed (see LICENSE). This document identifies direct runtime/build/test dependencies; their own copyright notices and license texts remain applicable. No copyrighted music or album-art catalog is bundled with the app. Material icons are used under Apache-2.0.
+Original wonderPlay source is MIT licensed (see LICENSE). The combined application is distributed under GPL-3.0-or-later because it links NewPipe Extractor (see LICENSE-GPL-3.0). The supplied logo was adapted at the project owner’s request. This document identifies direct runtime/build/test dependencies; their own copyright notices and license texts remain applicable. No copyrighted music or album-art catalog is bundled with the app. Material icons are used under Apache-2.0.
 
 | Component | License | Upstream |
 | --- | --- | --- |
+| NewPipe Extractor v0.26.5 | GPL-3.0-or-later | https://github.com/TeamNewPipe/NewPipeExtractor |
+| Rhino | MPL-2.0 | https://github.com/mozilla/rhino |
+| Jsoup | MIT | https://github.com/jhy/jsoup |
+| Nanojson (NewPipe fork) | MIT | https://github.com/TeamNewPipe/nanojson |
+| Protobuf Java Lite | BSD-3-Clause | https://github.com/protocolbuffers/protobuf |
+| JDK desugaring library | GPL-2.0 with Classpath Exception | https://github.com/google/desugar_jdk_libs |
 | Kotlin and kotlinx.coroutines | Apache-2.0 | https://github.com/JetBrains/kotlin ; https://github.com/Kotlin/kotlinx.coroutines |
 | AndroidX Core, Activity, Lifecycle, Compose, Material, Room, DataStore, Palette, SplashScreen | Apache-2.0 | https://android.googlesource.com/platform/frameworks/support/ |
 | AndroidX Media3 / ExoPlayer | Apache-2.0 | https://github.com/androidx/media |

@@ -28,6 +28,16 @@ class LibraryRepositoryTest {
         repo=LibraryRepository(context,db,store)
     }
     @After fun close(){scope.cancel();db.close()}
+    @Test fun themeAndCatalogPreferencesPersistWithoutChangingLibrary()= runBlocking {
+        val defaults=repo.settings.first()
+        assertFalse(defaults.albumColors)
+        assertEquals(com.wonderplay.domain.SearchSource.YOUTUBE,defaults.searchSource)
+        repo.toggleFavorite(one)
+        val changed=defaults.copy(albumColors=true,searchSource=com.wonderplay.domain.SearchSource.AUDIUS)
+        repo.updateSettings(changed)
+        assertEquals(changed,repo.settings.first())
+        assertEquals(one,repo.favorites.first().single())
+    }
     @Test fun rapidFavoriteTogglesAreSerialized()= runBlocking {
         coroutineScope { repeat(20){launch(Dispatchers.Default){repo.toggleFavorite(one)}} }
         assertTrue(repo.favorites.first().isEmpty())

@@ -46,7 +46,7 @@ internal fun HomeScreen(vm: AppViewModel, history: List<Track>, favorites: List<
                 Spacer(Modifier.height(14.dp))
                 Text(if (history.isEmpty()) "Good music.\nYour own rhythm." else "Back to\nyour kind of sound.", style = MaterialTheme.typography.displaySmall)
                 Spacer(Modifier.height(16.dp))
-                Text(if (history.isEmpty()) "Find an independent artist. Rediscover a favorite. Make a little room for listening." else "A familiar favorite, or something you haven’t heard yet. Settle in.",
+                Text(if (history.isEmpty()) "Find a favorite artist. Discover a new song. Make a little room for listening." else "A familiar favorite, or something you haven’t heard yet. Settle in.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.widthIn(max = 340.dp))
                 PrimaryAction("Find your next listen", Icons.Rounded.Search, Modifier.padding(top = 24.dp), onSearch)
             }
@@ -63,7 +63,7 @@ internal fun HomeScreen(vm: AppViewModel, history: List<Track>, favorites: List<
                             Icon(Icons.Rounded.Headphones, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(23.dp))
                             Text("A little less noise.", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 12.dp))
                         }
-                        Text("No account. No ads. A place for your music, from the Audius community and your own collection.",
+                        Text("No account. No ads. A place for your favorite recordings and your own collection.",
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp))
                     }
                 }
@@ -126,7 +126,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                 if (recent.isNotEmpty()) {
                     item { Spacer(Modifier.height(12.dp)); SectionHeading("Recent searches", action = "Clear", onAction = vm::clearSearches) }
                     items(recent, key = { it }) { term -> ActionRow(Icons.Rounded.History, term) { vm.search(term) } }
-                } else item { EmptyState("Follow your curiosity", "Search independent music on Audius. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
+                } else item { EmptyState("Follow your curiosity", "Search YouTube Music or choose Audius in Settings. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
             } else {
                 if (tracks.isNotEmpty()) {
                     item { Text("${tracks.size}${if (hasMore) "+" else ""} TRACKS", style = MaterialTheme.typography.labelSmall,
@@ -136,13 +136,13 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                         current = track.id == currentId, favorite = favorites.any { it.id == track.id }) }
                 }
                 if (error != null) item { FailureState(error, vm::retrySearch) }
-                else if (!searching && tracks.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre. Audius has an independent catalog.", Icons.Rounded.SearchOff) }
+                else if (!searching && tracks.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre. You can change the catalog in Settings.", Icons.Rounded.SearchOff) }
                 if (hasMore && !searching && error == null) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { QuietAction("More tracks", Icons.Rounded.Add, onClick = vm::loadMore) } }
                 item {
                     Column(Modifier.padding(horizontal = Space.page, vertical = 22.dp)) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        Text("Looking for a different catalog?", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
-                        Text("Search YouTube Music in your browser. Playback there is handled by YouTube.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp))
+                        Text("Open the original service", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 20.dp))
+                        Text("If a track is unavailable here, you can also search in YouTube Music.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp))
                         TextButton(onClick = { keyboard?.hide(); onExternalSearch(query) }, contentPadding = PaddingValues(0.dp)) {
                             Text("Open YouTube Music"); Spacer(Modifier.width(8.dp)); Icon(Icons.Rounded.OpenInNew, null, Modifier.size(16.dp))
                         }

@@ -47,7 +47,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private var searchGeneration = 0
     private var remoteOffset = 0
 
-    init { player.connect() }
+    init {
+        player.connect()
+        viewModelScope.launch { settings.map { it.searchSource }.distinctUntilChanged().drop(1).collect { if (mutableUi.value.query.isNotBlank()) retrySearch() } }
+    }
 
     fun search(query: String) {
         searchJob?.cancel()

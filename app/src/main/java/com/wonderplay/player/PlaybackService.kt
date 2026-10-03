@@ -11,6 +11,9 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
+import com.wonderplay.domain.SourceException
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -63,9 +66,16 @@ class PlaybackService : MediaSessionService() {
         val gated = DataSource.Factory { NetworkPolicyDataSource(upstream.createDataSource(), networkPolicy) }
         val factory = ResolvingDataSource.Factory(gated, resolver)
         player = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(factory))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(factory).setLoadErrorHandlingPolicy(object : DefaultLoadErrorHandlingPolicy(5) {
+                override fun getRetryDelayMsFor(info: LoadErrorHandlingPolicy.LoadErrorInfo): Long {
+                    // Missing files and unavailable/restricted resolutions need user action, not repeated network retries.
+                    var cause: Throwable? = info.exception
+                    repeat(8) { if(cause is SourceException) return C.TIME_UNSET; cause = cause?.cause }
+                    return super.getRetryDelayMsFor(info)
+                }
+            }))
             .setLoadControl(DefaultLoadControl.Builder()
-                .setBufferDurationsMs(15_000, 45_000, 700, 1_800).build())
+                .setBufferDurationsMs(30_000, 120_000, 700, 3_000).build())
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA)
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true)

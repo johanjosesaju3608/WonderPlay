@@ -19,11 +19,11 @@ Room stores metadata, ordered playlist membership, favorites, history, local fil
 
 ## Source boundary
 
-MusicSource exposes search, track/artist/album/playlist metadata, playback resolution and related tracks. AudiusSource only accepts public, non-gated, streamable music. The local source handles user-selected URIs. The YouTubeMusicSource supports external validated handoff URLs and reports in-app playback as unsupported; it has no media extractor or credentials mechanism.
+MusicSource exposes search, track/artist/album/playlist metadata, playback resolution and related tracks. AudiusSource only accepts public, non-gated, streamable music. The local source handles user-selected URIs. YouTubeMusicSource uses NewPipe Extractor for YouTube Music song search and public audio resolution. YouTube Music is the default; Audius is selectable in Settings. There is no account or paid-content access.
 
 ## Artwork and metadata
 
-Provider data is normalized without removing meaningful live/acoustic/remix/remastered versions. The ranking layer has a deterministic local scorer and engineered features; it does not falsely claim to ship a trained neural model. Artwork resolution uses exact-enough artist/title matching and bounded metadata requests, falling back to source artwork or the design system's deterministic artwork treatment. Images are decoded for their display size and cached separately from audio.
+Provider data is normalized without removing meaningful live/acoustic/remix/remastered versions. The ranking layer has a deterministic local scorer and engineered features; it does not falsely claim to ship a trained neural model. Artwork resolution uses exact-enough artist/title matching and bounded metadata requests, falling back to source artwork or the design system's deterministic artwork treatment. Images are decoded for their display size and cached separately from audio. Album colors uses a 96-pixel software decode and Palette off the main thread, then enforces text contrast. Missing covers fall back to Coffee. Expansion springs are clamped before use in layout. The player uses a gradient instead of a full-screen blurred image layer.
 
 ## Privacy and export
 

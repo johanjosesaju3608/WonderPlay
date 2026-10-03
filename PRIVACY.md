@@ -15,13 +15,13 @@ Library data is private app storage. Android cloud backup is disabled. Clearing 
 - Artwork hosts returned by the public provider: requests for cover images displayed in the app.
 - MusicBrainz (`musicbrainz.org`), where canonical artwork matching is requested: normalized artist/song text. Lookups are bounded and rate limited.
 - Cover Art Archive (`coverartarchive.org`, potentially redirecting to `archive.org` infrastructure): release IDs and cover image requests after a metadata match.
-- YouTube Music (`music.youtube.com`): only an explicit external handoff; the app/browser you open has its own privacy terms.
+- YouTube/Google (`music.youtube.com`, `youtube.com`, Google video/image hosts): selected searches, track identifiers, public player metadata and audio requests via NewPipe Extractor. External service links remain available.
 
 These providers receive ordinary HTTP information, including the user's IP address. wonderPlay adds no persistent device identifier. Third-party providers have independent policies and availability. Search does not use any remote AI model.
 
 ## Access and limits
 
-Only publicly streamable, non-gated source audio is accepted. No login credentials, source access tokens, payment access, DRM keys, or YouTube media extraction are collected or implemented. The app does not impersonate any service's official app.
+Only publicly streamable, non-gated source audio is accepted. No login credentials, source access tokens, payment access, DRM keys are collected or implemented. NewPipe resolves public YouTube audio; the app does not unlock restricted content.
 
 Wi-Fi-only restrictions are enforced for remote playback. Browsing/search and artwork requests still use the available connection. They are not an app-wide firewall. Local files remain playable without networking.
 

@@ -9,4 +9,4 @@
 
 See QA.md for executed checks and remaining physical-device validation. The product is named wonderPlay throughout public source and documentation.
 
-Audius/local playback and external YouTube Music handoff are the implemented source boundaries. The streaming catalog differs from YouTube Music.
+1.0.1 adds YouTube Music song search and public in-app audio playback via NewPipe, optional cover-derived colors, the supplied logo, bounded expansion animation and increased streaming buffer headroom.

@@ -30,9 +30,16 @@ internal fun SettingsScreen(settings:AppSettings,vm:AppViewModel,onBack:()->Unit
             item { Row(Modifier.fillMaxWidth().padding(horizontal=24.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 ThemeMode.entries.forEach { theme -> FilterChip(settings.theme==theme,{vm.updateSettings(settings.copy(theme=theme))},label={Text(theme.name.lowercase().replaceFirstChar(Char::uppercaseChar))},modifier=Modifier.weight(1f).heightIn(min=48.dp),shape=Shape.control) }
             } }
+            item { Information("Color style","Album colors follow the current cover, with coffee as the fallback.") }
+            item { Row(Modifier.fillMaxWidth().padding(horizontal=24.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                listOf(false to "Coffee",true to "Album colors").forEach { (dynamic,label) -> FilterChip(settings.albumColors==dynamic,{vm.updateSettings(settings.copy(albumColors=dynamic))},label={Text(label)},modifier=Modifier.weight(1f).heightIn(min=48.dp),shape=Shape.control) }
+            } }
             item { SettingSwitch("Tactile feedback","Subtle haptics for meaningful actions",settings.haptics) {vm.updateSettings(settings.copy(haptics=it))} }
             item { SettingSwitch("Reduce motion","Use immediate, simpler transitions",settings.reducedMotion) {vm.updateSettings(settings.copy(reducedMotion=it))} }
             item { Spacer(Modifier.height(16.dp));SectionHeading("Listening") }
+            item { Row(Modifier.fillMaxWidth().padding(horizontal=24.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                SearchSource.entries.forEach { source -> FilterChip(settings.searchSource==source,{vm.updateSettings(settings.copy(searchSource=source))},label={Text(if(source==SearchSource.YOUTUBE) "YouTube Music" else "Audius")},modifier=Modifier.weight(1f).heightIn(min=48.dp),shape=Shape.control) }
+            } }
             item { SettingSwitch("Wi-Fi-only streaming","Local files still work offline. Search and artwork may use mobile data.",settings.wifiOnly) {vm.updateSettings(settings.copy(wifiOnly=it))} }
             item { Information("Audio quality","The original available stream, without re-encoding. Audio quality depends on the source; wonderPlay does not claim lossless streaming.") }
             item { Spacer(Modifier.height(16.dp));SectionHeading("On this device") }
@@ -51,9 +58,9 @@ internal fun SettingsScreen(settings:AppSettings,vm:AppViewModel,onBack:()->Unit
         val context=LocalContext.current
         val text by produceState(initialValue="",title) {
             value=when(title) {
-                "Sources" -> "Audius provides public, non-gated music uploaded by creators. Its independent catalog differs from YouTube Music. Availability depends on the artist, provider and region.\n\nChoose your own audio files through Android’s file picker for local playback. Files are not uploaded or copied.\n\nYouTube Music searches open externally in its app or website. wonderPlay does not extract YouTube audio or bypass access controls. Remote tracks are streamed, not saved for offline playback."
-                "Privacy" -> "No accounts, ads, analytics, tracking IDs or cloud AI. Favorites, playlists, searches, settings and history stay in private app storage. Android cloud backup is disabled.\n\nSearch and streaming requests go to Audius and its media hosts. Artwork loads from provider hosts. Missing canonical artwork may be matched using MusicBrainz and Cover Art Archive. Providers receive your IP address and requested music metadata.\n\nSelected local files use Android’s read grants. No microphone, camera, location or broad storage access. Uninstalling deletes your local library metadata."
-                else -> withContext(Dispatchers.IO) { listOf("THIRD-PARTY-NOTICES.txt","wonderPlay-MIT.txt","Apache-2.0.txt").joinToString("\n\n") { name -> context.assets.open("licenses/$name").bufferedReader().use {it.readText()} } }
+                "Sources" -> "YouTube Music is the default search catalog. Publicly available audio plays inside wonderPlay using the open-source NewPipe extractor. Restricted or unavailable tracks may not play. No account or paid-content access is implemented.\n\nAudius provides public, non-gated music uploaded by creators. Its independent catalog differs from YouTube Music. Availability depends on the artist, provider and region.\n\nChoose your own audio files through Android’s file picker for local playback. Files are not uploaded or copied.\n\nThe external YouTube Music link is available as a fallback. Remote tracks are streamed, not saved for offline playback."
+                "Privacy" -> "No accounts, ads, analytics, tracking IDs or cloud AI. Favorites, playlists, searches, settings and history stay in private app storage. Android cloud backup is disabled.\n\nSearch and streaming requests go to YouTube/Google, Audius and their media hosts. Artwork loads from provider hosts. Missing canonical artwork may be matched using MusicBrainz and Cover Art Archive. Providers receive your IP address and requested music metadata.\n\nSelected local files use Android’s read grants. No microphone, camera, location or broad storage access. Uninstalling deletes your local library metadata."
+                else -> withContext(Dispatchers.IO) { listOf("THIRD-PARTY-NOTICES.txt","wonderPlay-MIT.txt","Apache-2.0.txt","GPL-3.0.txt").joinToString("\n\n") { name -> context.assets.open("licenses/$name").bufferedReader().use {it.readText()} } }
             }
         }
         AlertDialog(onDismissRequest={info=null},title={Text(title)},text={Text(text,modifier=Modifier.heightIn(max=440.dp).verticalScroll(rememberScrollState()),style=MaterialTheme.typography.bodySmall)},confirmButton={TextButton(onClick={info=null}){Text("Done")}})

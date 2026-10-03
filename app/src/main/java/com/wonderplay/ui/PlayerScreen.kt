@@ -38,14 +38,14 @@ internal fun PlayerSurface(state:PlayerState,vm:AppViewModel,expanded:Boolean,on
     val current=state.current ?: return
     val reduced=LocalReducedMotion.current
     val haptics=LocalWonderHaptics.current
-    val fraction by animateFloatAsState(if(expanded) 1f else 0f,if(reduced) tween(0) else spring(dampingRatio=.88f,stiffness=420f),label="player expansion")
+    val animatedFraction by animateFloatAsState(if(expanded) 1f else 0f,if(reduced) tween(0) else spring(dampingRatio=.88f,stiffness=420f),label="player expansion")
+    val fraction = playerLayoutFraction(animatedFraction)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width=maxWidth; val height=maxHeight
         val artSize=lerp(50.dp,minOf(width-48.dp,height*.39f),fraction)
         Surface(Modifier.align(Alignment.BottomCenter).padding(bottom=lerp(72.dp,0.dp,fraction),start=lerp(12.dp,0.dp,fraction),end=lerp(12.dp,0.dp,fraction))
             .fillMaxWidth().height(lerp(72.dp,height,fraction)),shape=Shape.panel,color=MaterialTheme.colorScheme.surfaceContainer,tonalElevation=0.dp) {
-            Box(Modifier.fillMaxSize()) {
-                if(fraction>.02f) Artwork(current,Modifier.fillMaxSize().alpha(.16f*fraction).blur(65.dp))
+            Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(LocalPlayerGradient.current))) {
                 val artModifier=Modifier.offset(x=lerp(10.dp,(width-artSize)/2,fraction),y=lerp(10.dp,64.dp,fraction)).size(artSize)
                 Crossfade(current,modifier=artModifier,animationSpec=tween(if(reduced) 0 else 220),label="cover") { track ->
                     var dx by remember { mutableFloatStateOf(0f) }; var dy by remember { mutableFloatStateOf(0f) }
@@ -97,7 +97,7 @@ internal fun PlayerSurface(state:PlayerState,vm:AppViewModel,expanded:Boolean,on
                         if(state.phase in listOf(PlaybackPhase.RESOLVING,PlaybackPhase.BUFFERING)) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
                         state.error?.let { Text(it,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.error);TextButton(onClick=vm.player::retry) { Text("Retry playback") } }
                         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                            Text(if(current.source=="local") "ON YOUR DEVICE" else "AUDIUS · ${state.qualityLabel.uppercase()}",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.weight(1f))
+                            Text(if(current.source=="local") "ON YOUR DEVICE" else "${if(current.source=="youtube") "YOUTUBE MUSIC" else "AUDIUS"} · ${state.qualityLabel.uppercase()}",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.weight(1f))
                             TactileIcon(Icons.Rounded.QueueMusic,"Open queue",onQueue)
                         }
                     }
