@@ -62,7 +62,7 @@ internal fun PlayerSurface(state:PlayerState,vm:AppViewModel,expanded:Boolean,on
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width=maxWidth; val height=maxHeight
         val artSize=lerp(50.dp,minOf(width-48.dp,height*.39f),fraction)
-        Surface(Modifier.align(Alignment.BottomCenter).padding(bottom=lerp(72.dp,0.dp,fraction),start=lerp(12.dp,0.dp,fraction),end=lerp(12.dp,0.dp,fraction))
+        Surface(Modifier.align(Alignment.BottomCenter).padding(bottom=lerp(88.dp,0.dp,fraction),start=lerp(12.dp,0.dp,fraction),end=lerp(12.dp,0.dp,fraction))
             .fillMaxWidth().height(lerp(72.dp,height,fraction)).alpha(boundaryFade.value).testTag(if(expanded) "Expanded player" else "Mini player").then(miniGesture),shape=Shape.panel,color=MaterialTheme.colorScheme.surfaceContainer,tonalElevation=0.dp) {
             Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(LocalPlayerGradient.current))) {
                 val artModifier=Modifier.offset(x=lerp(10.dp,(width-artSize)/2,fraction),y=lerp(10.dp,64.dp,fraction)).size(artSize)
@@ -132,21 +132,23 @@ internal fun QueueSheet(state:PlayerState,vm:AppViewModel,onDismiss:()->Unit) {
     val haptics=LocalWonderHaptics.current
     val threshold=with(LocalDensity.current){72.dp.toPx()}
     val latest by rememberUpdatedState(state)
+    val order = state.playbackOrder.takeIf { it.sorted() == state.queue.indices.toList() } ?: state.queue.indices.toList()
     Column(Modifier.fillMaxWidth().heightIn(max=600.dp)) {
         ScreenHeader("Up next","${state.queue.size} tracks") { TextButton(onClick={vm.player.clearQueue();onDismiss()}) {Text("Clear")} }
-        Text("Hold the handle to reorder. Tap a track to play.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(horizontal=24.dp,vertical=8.dp))
+        Text(if(state.shuffle) "Shuffle playback order. Turn shuffle off to reorder." else "Hold the handle to reorder. Tap a track to play.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(horizontal=24.dp,vertical=8.dp))
         LazyColumn(Modifier.weight(1f,false),contentPadding=PaddingValues(bottom=24.dp)) {
-            itemsIndexed(state.queue) { index,track ->
+            itemsIndexed(order) { _,index ->
+                val track = state.queue[index]
                 Row(verticalAlignment=Alignment.CenterVertically) {
                     var amount by remember { mutableFloatStateOf(0f) }; var moving by remember { mutableIntStateOf(index) }
-                    Icon(Icons.Rounded.DragHandle,"Reorder ${track.title}",Modifier.size(48.dp).padding(12.dp).pointerInput(Unit) {
-                        detectDragGesturesAfterLongPress(onDragStart={moving=index;amount=0f;haptics.perform(HapticEvent.DRAG_START)},onDragCancel={amount=0f},onDragEnd={amount=0f}) { change,drag ->
+                    Icon(Icons.Rounded.DragHandle,"Reorder ${track.title}",Modifier.size(48.dp).padding(12.dp).pointerInput(state.shuffle) {
+                        if (!state.shuffle) detectDragGesturesAfterLongPress(onDragStart={moving=index;amount=0f;haptics.perform(HapticEvent.DRAG_START)},onDragCancel={amount=0f},onDragEnd={amount=0f}) { change,drag ->
                             change.consume();amount+=drag.y
                             if(abs(amount)>threshold) { val next=(moving+if(amount>0) 1 else -1).coerceIn(latest.queue.indices);if(next!=moving) {vm.player.move(moving,next);moving=next;haptics.perform(HapticEvent.REORDER)};amount=0f }
                         }
                     })
                     Column(Modifier.weight(1f).clickable {vm.player.playIndex(index)}.padding(vertical=14.dp)) {Text(track.title,style=MaterialTheme.typography.titleSmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=if(index==state.index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface);Text(track.artist,style=MaterialTheme.typography.bodySmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurfaceVariant)}
-                    TactileIcon(Icons.Rounded.ArrowUpward,"Move ${track.title} up",{vm.player.move(index,index-1)},enabled=index>0,event=HapticEvent.REORDER)
+                    TactileIcon(Icons.Rounded.ArrowUpward,"Move ${track.title} up",{vm.player.move(index,index-1)},enabled=index>0 && !state.shuffle,event=HapticEvent.REORDER)
                     TactileIcon(Icons.Rounded.Close,"Remove ${track.title} from queue",{vm.player.remove(index)})
                 }
             }

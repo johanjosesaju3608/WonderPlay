@@ -47,6 +47,7 @@ class SourceRegistry(private val context: Context, private val library: LibraryS
         return MusicCollection(track.albumId ?: track.id,track.album.ifBlank { track.title },track.artist,track.artworkUrl,tracks,track.year)
     }
     suspend fun getRelatedTracks(track: Track): List<Track> = stored().filter { it.artist==track.artist && it.id!=track.id }
+    suspend fun searchCollections(query: String) = youtube.searchCollections(query)
     suspend fun featuredPlaylists() = FeaturedPlaylists().load()
     suspend fun getPlaylist(id: String) = FeaturedPlaylists().open(id)
     private suspend fun stored() = (library.favorites.first()+library.history.first()+library.localTracks.first()+library.playlists.first().flatMap { it.tracks }).distinctBy { it.id }

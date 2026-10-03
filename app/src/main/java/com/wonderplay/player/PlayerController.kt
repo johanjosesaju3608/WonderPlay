@@ -92,7 +92,13 @@ class PlayerController(private val context:Context, @Suppress("UNUSED_PARAMETER"
         }
         mutable.value=PlayerState(tracks,index,mapPhase(player.playbackState,player.isPlaying,tracks.isNotEmpty(),failed!=null,info?.resolving==true && player.playWhenReady),
             player.isPlaying,player.currentPosition.coerceAtLeast(0),player.duration.takeIf { it!=C.TIME_UNSET && it>0 } ?: tracks.getOrNull(index)?.durationMs ?: 0,
-            player.bufferedPosition.coerceAtLeast(0),player.shuffleModeEnabled,when(player.repeatMode) { Player.REPEAT_MODE_ALL->RepeatMode.ALL; Player.REPEAT_MODE_ONE->RepeatMode.ONE; else->RepeatMode.OFF },error,info?.quality ?: "Source quality")
+            player.bufferedPosition.coerceAtLeast(0),player.shuffleModeEnabled,when(player.repeatMode) { Player.REPEAT_MODE_ALL->RepeatMode.ALL; Player.REPEAT_MODE_ONE->RepeatMode.ONE; else->RepeatMode.OFF },error,info?.quality ?: "Source quality", playbackOrder = buildList {
+                val timeline = player.currentTimeline
+                var next = timeline.getFirstWindowIndex(player.shuffleModeEnabled)
+                while (next != C.INDEX_UNSET && size < tracks.size) {
+                    add(next); next = timeline.getNextWindowIndex(next, Player.REPEAT_MODE_OFF, player.shuffleModeEnabled)
+                }
+            })
     }
     fun release() { closed=true; controller?.removeListener(listener); scope.cancel(); future?.let(MediaController::releaseFuture); controller=null }
 }

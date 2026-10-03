@@ -27,4 +27,30 @@ class YouTubeMusicSourceTest {
         assertNull(YouTubeMusicSource.track(item))
         assertThrows(com.wonderplay.domain.SourceException::class.java) {YouTubeMusicSource.validId("../not-a-track")}
     }
+    @org.junit.Test fun officialPlaylistFilterRejectsCommunityAndPersonalMixes() {
+        org.junit.Assert.assertTrue(YouTubeMusicSource.isOfficialPlaylist("RDCLAK5uy_kCicKSTh7ylcZSwvrN0vV4dI3eqEpXR4A"))
+        org.junit.Assert.assertFalse(YouTubeMusicSource.isOfficialPlaylist("PLabcdefghijklmnop"))
+        org.junit.Assert.assertFalse(YouTubeMusicSource.isOfficialPlaylist("RDAMVMabcdefghijk"))
+    }
+
+    @org.junit.Test fun featuredSearchParserSkipsCommunityRowsAndKeepsOfficialTitles() {
+        fun row(id: String): org.json.JSONObject {
+            val title = org.json.JSONObject().put("runs", org.json.JSONArray().put(org.json.JSONObject().put("text", "Official fixture")))
+            val column = org.json.JSONObject().put("musicResponsiveListItemFlexColumnRenderer", org.json.JSONObject().put("text", title))
+            val endpoint = org.json.JSONObject().put("browseEndpoint", org.json.JSONObject().put("browseId", "VL$id"))
+            val item = org.json.JSONObject().put("navigationEndpoint", endpoint).put("flexColumns", org.json.JSONArray().put(column))
+            return org.json.JSONObject().put("musicResponsiveListItemRenderer", item)
+        }
+        val root = org.json.JSONObject().put("contents", org.json.JSONObject().put("items", org.json.JSONArray().put(row("RDCLAK5uy_kCicKSTh7ylcZSwvrN0vV4dI3eqEpXR4A")).put(row("PLabcdefghijklmnop"))))
+        val result = FeaturedPlaylists.parseSearch(root)
+        org.junit.Assert.assertEquals(1, result.size)
+        org.junit.Assert.assertEquals("Official fixture", result.single().title)
+    }
+
+    @org.junit.Test fun exactNamedCollectionAppearsBeforeBroadAlbumMatches() {
+        val broad = com.wonderplay.domain.MusicCollection("album", "Bollywood hits", "Album")
+        val exact = com.wonderplay.domain.MusicCollection("official", "Bollywood Hitlist", "Official playlist")
+        org.junit.Assert.assertEquals(exact, YouTubeMusicSource.rankCollections("bollywood hitlist", listOf(broad, exact)).first())
+    }
+
 }

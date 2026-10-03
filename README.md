@@ -6,7 +6,15 @@ A quiet, open-source Android music player with real streaming, a local-first lib
 
 ## Install
 
-Download **wonderPlay-1.0.3.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+Download **wonderPlay-1.0.4.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+
+## New in 1.0.4
+
+- Search includes albums and official YouTube Music featured playlists by name. Exact titles rank first; community playlists and personal mixes are excluded. Collection search is cancellable and independent from song-search paging.
+- Floating themed navigation with a selected icon-and-label pill, accessible tab labels and reduced-motion support.
+- Local tracks no longer fetch or display lyrics.
+- More cover URL formats request sharp artwork. Expanded video thumbnails try a higher-resolution image, falling back when unavailable or a small placeholder is returned.
+- Shuffled playback starts with the chosen track and visits the remaining queue; Up Next displays the real playback order. Turn shuffle off to reorder manually.
 
 ## New in 1.0.3
 

@@ -75,14 +75,9 @@ fun WonderPlayRoot(viewModel:AppViewModel) {
                             }
                         }
                         if(player.current!=null) Spacer(Modifier.height(84.dp))
-                        Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal=24.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically) {
-                            listOf("Home" to Icons.Rounded.Home,"Search" to Icons.Rounded.Search,"Library" to Icons.Rounded.LibraryMusic).forEach { (label,icon) ->
-                                TextButton(onClick={ haptics.perform(HapticEvent.SELECT); tab=label; showSettings=false; collection=null; vm.closeDetail() },modifier=Modifier.weight(1f),colors=ButtonDefaults.textButtonColors(contentColor=if(tab==label) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)) {
-                                    Column(horizontalAlignment=Alignment.CenterHorizontally) { Icon(icon,null,Modifier.size(22.dp)); Text(label,style=MaterialTheme.typography.labelMedium) }
-                                }
-                            }
-                        }
+                        Spacer(Modifier.height(88.dp))
                     }
+                    FloatingNavigation(tab, { label -> haptics.perform(HapticEvent.SELECT); tab=label; showSettings=false; collection=null; vm.closeDetail() }, Modifier.align(Alignment.BottomCenter))
                     player.current?.let { PlayerSurface(player,vm,expanded,{expanded=it},favorites.any { t->t.id==it.id },{vm.toggleFavorite(it)},{queue=true},{menu=it}) }
                     SnackbarHost(snackbar,Modifier.align(Alignment.BottomCenter).padding(bottom=if(player.current!=null) 152.dp else 72.dp))
                 }

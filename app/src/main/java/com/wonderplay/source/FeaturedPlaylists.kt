@@ -17,6 +17,14 @@ class FeaturedPlaylists(private val http: SourceHttpClient = SourceHttpClient())
         val response = http.text("https://music.youtube.com/youtubei/v1/browse".toHttpUrl(), body) ?: throw SourceException("Featured playlists are unavailable. Try again.")
         return parse(JSONObject(response)).ifEmpty { throw SourceException("YouTube Music didn't return featured playlists. Try again later.") }
     }
+    suspend fun search(query: String): List<MusicCollection> {
+        val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", "1.20260930.01.00").put("hl", "en").put("gl", Locale.getDefault().country.takeIf { it.length == 2 } ?: "US")
+        // Dedicated featured-playlist filter; the generic playlists filter returns community lists.
+        val body = JSONObject().put("context", JSONObject().put("client", client)).put("query", query.take(200))
+            .put("params", "EgeKAQQoADgBagwQDhAKEAMQBBAJEAU%3D")
+        val response = http.text("https://music.youtube.com/youtubei/v1/search".toHttpUrl(), body) ?: throw SourceException("Playlist search unavailable.")
+        return parseSearch(JSONObject(response))
+    }
     suspend fun open(id: String): MusicCollection {
         if (!id.matches(Regex("[A-Za-z0-9_-]{10,100}"))) throw SourceException("Invalid playlist.")
         val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", "1.20260930.01.00").put("hl", "en").put("gl", Locale.getDefault().country.takeIf { it.length == 2 } ?: "US")
@@ -80,6 +88,31 @@ class FeaturedPlaylists(private val http: SourceHttpClient = SourceHttpClient())
             }
             visit(root.optJSONObject("contents") ?: root.optJSONObject("continuationContents") ?: root, 0)
             return result
+        }
+        internal fun parseSearch(root: JSONObject): List<MusicCollection> {
+            val result = mutableListOf<MusicCollection>()
+            fun visit(value: Any?, depth: Int) {
+                if (depth > 35 || result.size >= 30) return
+                when(value) {
+                    is JSONObject -> {
+                        value.optJSONObject("musicResponsiveListItemRenderer")?.let { row ->
+                            val endpoint = row.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")
+                            val id = endpoint?.optString("browseId").orEmpty().removePrefix("VL")
+                            if (YouTubeMusicSource.isOfficialPlaylist(id)) {
+                                fun column(i: Int) = row.optJSONArray("flexColumns")?.optJSONObject(i)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
+                                val title = runs(column(0))
+                                val images = row.optJSONObject("thumbnail")?.optJSONObject("musicThumbnailRenderer")?.optJSONObject("thumbnail")?.optJSONArray("thumbnails")
+                                val art = images?.let { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) }.maxByOrNull { it.optInt("width") }?.optString("url") }?.takeIf { it.startsWith("https://") }
+                                if (title.isNotBlank()) result += MusicCollection(id, title, "Official playlist · ${runs(column(1))}", art)
+                            }
+                        }
+                        value.keys().forEach { visit(value.opt(it), depth + 1) }
+                    }
+                    is JSONArray -> for(i in 0 until value.length()) visit(value.opt(i), depth + 1)
+                }
+            }
+            visit(root.optJSONObject("contents"), 0)
+            return result.distinctBy { it.id }
         }
         internal fun parse(root: JSONObject): List<MusicCollection> {
             val result = mutableListOf<MusicCollection>()

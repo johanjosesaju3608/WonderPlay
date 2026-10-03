@@ -28,3 +28,9 @@ Provider data is normalized without removing meaningful live/acoustic/remix/rema
 ## Privacy and export
 
 No developer server receives library or device data. Only source/music metadata services are contacted for explicit browsing/playback and related artwork. The repository excludes local SDK paths, signing keys, passwords, generated build outputs and IDE state. APKs belong to release assets, not Git history.
+
+## Search and shuffle in 1.0.4
+
+Song search keeps its own NewPipe paging cursor. Collection search uses an independent album extractor plus the dedicated YouTube Music featured-playlist filter, with conservative editorial ID checks. Both jobs are cancelled/replaced when the query changes. Exact collection names rank before broad matches.
+
+The service anchors shuffle order to the current queue occurrence when shuffle is enabled or the queue is replaced. The controller publishes Media3's playback order for Up Next. Local tracks do not request lyrics. The floating navigation uses the existing dynamic Material colors and honors reduced motion.

@@ -27,7 +27,7 @@ class PlayerExpansionTest {
         repeat(samples){bytes.putShort(0)};file.writeBytes(bytes.array())
         val track=Track("local:expansion","Expansion regression","Local fixture",source="local",streamUrl=file.toURI().toString(),durationMs=30000)
         runBlocking { app.container.library.saveLocalTrack(track) }
-        compose.onNodeWithText("Library",useUnmergedTree=true).performClick()
+        compose.onNodeWithContentDescription("Library",useUnmergedTree=true).performClick()
         compose.onAllNodesWithText("On device",useUnmergedTree=true).onFirst().performClick()
         compose.waitUntil(5000){compose.onAllNodesWithText(track.title).fetchSemanticsNodes().isNotEmpty()}
         compose.onAllNodesWithText(track.title).onFirst().performClick()

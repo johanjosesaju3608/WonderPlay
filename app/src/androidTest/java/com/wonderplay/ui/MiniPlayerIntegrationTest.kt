@@ -27,6 +27,11 @@ class MiniPlayerIntegrationTest {
         try {
             compose.runOnUiThread {vm.player.play(listOf(track,track.copy(id="local:gesture-two",title="Gesture two")))}
             compose.waitUntil(10000){vm.player.state.value.isPlaying}
+            compose.waitUntil(3000) { vm.lyrics.value.trackId == track.id }
+            compose.runOnIdle { assertFalse(vm.lyrics.value.loading); assertNull(vm.lyrics.value.lyrics) }
+            compose.onNodeWithTag("Mini player").performTouchInput {swipe(center,Offset(center.x,-height.toFloat()),350)}
+            compose.onNodeWithTag("Lyrics panel").assertDoesNotExist()
+            compose.onNodeWithContentDescription("Close player").performClick()
             compose.runOnUiThread {vm.player.seekTo(8000)}
             compose.waitUntil(3000){vm.player.state.value.positionMs>=7900}
             compose.onNodeWithTag("Mini player").performTouchInput {swipeRight()}

@@ -79,4 +79,5 @@ data class PlayerState(
     val repeat: RepeatMode = RepeatMode.OFF,
     val error: String? = null,
     val qualityLabel: String = "Source quality",
+    val playbackOrder: List<Int> = emptyList(),
 ) { val current: Track? get() = queue.getOrNull(index) }

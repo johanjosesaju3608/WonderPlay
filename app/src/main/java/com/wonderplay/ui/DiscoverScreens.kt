@@ -117,6 +117,7 @@ private fun ArtworkRail(tracks: List<Track>, vm: AppViewModel, onMenu: (Track) -
 @Composable
 internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, searching: Boolean, error: String?, hasMore: Boolean,
     recent: List<String>, favorites: List<Track>, currentId: String?, onMenu: (Track) -> Unit, onExternalSearch: (String) -> Unit) {
+    val searchUi by vm.ui.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -144,6 +145,22 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                     items(recent, key = { it }) { term -> ActionRow(Icons.Rounded.History, term) { vm.search(term) } }
                 } else item { EmptyState("Follow your curiosity", "Search YouTube Music. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
             } else {
+                if (searchUi.searchCollections.isNotEmpty()) {
+                    item { SectionHeading("Albums & official playlists") }
+                    item {
+                        LazyRow(contentPadding = PaddingValues(horizontal = Space.page, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            items(searchUi.searchCollections, key = { it.id }) { list ->
+                                Column(Modifier.width(160.dp).clickable { keyboard?.hide(); focusManager.clearFocus(); vm.openPlaylist(list) }) {
+                                    Artwork(Track("collection:${list.id}", list.title, list.subtitle, artworkUrl = list.artworkUrl), Modifier.size(160.dp).clip(Shape.artwork), "Open ${list.title}")
+                                    Text(list.title, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text(list.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                    }
+                }
+                if (searchUi.collectionsLoading) item { Text("Finding albums and official playlists…", Modifier.padding(horizontal = Space.page, vertical = 12.dp), style = MaterialTheme.typography.bodySmall) }
+                searchUi.collectionsError?.let { message -> item { FailureState(message, vm::retrySearch) } }
                 if (tracks.isNotEmpty()) {
                     item { Text("${tracks.size}${if (hasMore) "+" else ""} TRACKS", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.page, vertical = 20.dp)) }
@@ -152,7 +169,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                         current = track.id == currentId, favorite = favorites.any { it.id == track.id }) }
                 }
                 if (error != null) item { FailureState(error, vm::retrySearch) }
-                else if (!searching && tracks.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre.", Icons.Rounded.SearchOff) }
+                else if (!searching && !searchUi.collectionsLoading && tracks.isEmpty() && searchUi.searchCollections.isEmpty()) item { EmptyState("A different kind of discovery", "No playable tracks matched “${query.trim()}”. Try an artist, track title, or genre.", Icons.Rounded.SearchOff) }
                 if (hasMore && !searching && error == null) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { QuietAction("More tracks", Icons.Rounded.Add, onClick = vm::loadMore) } }
                 item {
                     Column(Modifier.padding(horizontal = Space.page, vertical = 22.dp)) {

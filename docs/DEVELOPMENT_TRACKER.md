@@ -17,3 +17,11 @@ See QA.md for executed checks and remaining physical-device validation. The prod
 - [x] Automatic dynamic colors, Audius removal, high-resolution system artwork
 - [x] 28 unit / 9 emulator checks, lint, APK verification and update over 1.0.2
 - [ ] Physical Vivo Origin Island recognition (not certified by emulator checks)
+
+## 1.0.4
+- [x] Disable lyrics lookup and UI for local files
+- [x] Search albums and official featured playlists, rank exact names first
+- [x] Floating themed navigation with accessible selected pill
+- [x] Additional high-resolution cover formats and safe video-artwork fallback
+- [x] Anchored shuffle/playback-order queue, actual navigation and repeat tests
+- [x] 34 unit tests, 10 emulator tests, lint, signed APK checks and update over 1.0.3

@@ -51,6 +51,7 @@ class PlaybackService : MediaSessionService() {
     private var session: MediaSession? = null
     private var userTouchedQueue = false
     private var restoreComplete = false
+    private var shuffledItems = emptyList<String>()
     private var recordedOccurrence: String? = null
     private data class QueueSnapshot(val tracks: List<Track>, val index: Int, val position: Long)
 
@@ -83,6 +84,12 @@ class PlaybackService : MediaSessionService() {
             .build()
         player.addListener(object : Player.Listener {
             override fun onEvents(player: Player, events: Player.Events) {
+                val items = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
+                if (player.shuffleModeEnabled && (items != shuffledItems || events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED))) {
+                    shuffledItems = items
+                    this@PlaybackService.player.setShuffleOrder(androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder(anchoredShuffleOrder(items.size, player.currentMediaItemIndex), System.nanoTime()))
+                } else if (!player.shuffleModeEnabled) shuffledItems = emptyList()
+
                 if (events.contains(Player.EVENT_TIMELINE_CHANGED)) {
                     resolver.retain((0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }.toSet())
                 }

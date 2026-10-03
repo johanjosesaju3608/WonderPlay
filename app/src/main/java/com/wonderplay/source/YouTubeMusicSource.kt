@@ -17,6 +17,7 @@ import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory
+import org.schabi.newpipe.extractor.playlist.PlaylistInfoItem
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import java.io.IOException
@@ -43,6 +44,23 @@ class YouTubeMusicSource : MusicSource {
             nextPage = page.nextPage
             SearchResult(page.items.filterIsInstance<StreamInfoItem>().mapNotNull(::track), page.hasNextPage())
         }
+    }
+    suspend fun searchCollections(query: String): List<MusicCollection> {
+        var albumError: SourceException? = null
+        val albums = try { extract {
+            val extractor = ServiceList.YouTube.getSearchExtractor(query.take(200), listOf(YoutubeSearchQueryHandlerFactory.MUSIC_ALBUMS), "")
+            extractor.fetchPage()
+            extractor.initialPage.items.filterIsInstance<PlaylistInfoItem>().mapNotNull { item ->
+                val playlistId = Uri.parse(item.url).getQueryParameter("list") ?: return@mapNotNull null
+                MusicCollection(playlistId, item.name, "Album · ${item.uploaderName.orEmpty()}", item.thumbnails.maxByOrNull { it.width }?.url)
+            }
+        } } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+        catch (failure: SourceException) { albumError = failure; emptyList() }
+        val playlists = try { FeaturedPlaylists().search(query) }
+        catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+        catch (failure: SourceException) { if (albums.isEmpty()) throw failure else emptyList() }
+        if (albums.isEmpty() && playlists.isEmpty() && albumError != null) throw albumError
+        return rankCollections(query, (albums + playlists).distinctBy { it.id })
     }
     override suspend fun getTrack(id: String): Track = extract {
         val clean = validId(id)
@@ -76,6 +94,14 @@ class YouTubeMusicSource : MusicSource {
         @Synchronized private fun initialize() {
             if (!initialized) { NewPipe.init(YouTubeDownloader()); initialized = true }
         }
+        internal fun rankCollections(query: String, collections: List<MusicCollection>): List<MusicCollection> {
+            val key = MetadataResolver.key(query)
+            return collections.sortedBy {
+                val title = MetadataResolver.key(it.title)
+                when { title == key -> 0; title.startsWith(key) -> 1; title.contains(key) -> 2; key.split(' ').all { word -> MetadataResolver.key(it.title + " " + it.subtitle).contains(word) } -> 3; else -> 4 }
+            }
+        }
+        internal fun isOfficialPlaylist(id: String) = id.startsWith("RDCLAK5uy_") && id.matches(Regex("[A-Za-z0-9_-]{20,100}"))
         internal fun validId(id: String): String = id.substringAfter(':').also {
             if (!it.matches(Regex("[A-Za-z0-9_-]{11}"))) throw SourceException("Invalid YouTube track.")
         }

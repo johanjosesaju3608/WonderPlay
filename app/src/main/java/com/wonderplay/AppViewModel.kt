@@ -22,6 +22,9 @@ import kotlinx.coroutines.withContext
 data class UiState(
     val query: String = "",
     val searchTracks: List<Track> = emptyList(),
+    val searchCollections: List<MusicCollection> = emptyList(),
+    val collectionsLoading: Boolean = false,
+    val collectionsError: String? = null,
     val searching: Boolean = false,
     val searchError: String? = null,
     val hasMore: Boolean = false,
@@ -52,6 +55,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val lyrics = mutableLyrics.asStateFlow()
     private var lyricsJob: Job? = null
     private var featuredJob: Job? = null
+    private var collectionSearchJob: Job? = null
     private var searchJob: Job? = null
     private var detailJob: Job? = null
     private var searchGeneration = 0
@@ -64,12 +68,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             player.state.map { it.current }.distinctUntilChangedBy { it?.id }.collect { track ->
                 lyricsJob?.cancel()
                 mutableLyrics.value = LyricsState(track?.id)
-                if (track != null) loadLyrics(track)
+                if (track != null && track.source != "local") loadLyrics(track)
             }
         }
     }
 
-    fun retryLyrics() { player.state.value.current?.let(::loadLyrics) }
+    fun retryLyrics() { player.state.value.current?.takeIf { it.source != "local" }?.let(::loadLyrics) }
     private fun loadLyrics(track: Track) {
         lyricsJob?.cancel()
         mutableLyrics.value = LyricsState(track.id, loading = true)
@@ -99,10 +103,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun search(query: String) {
         searchJob?.cancel()
+        collectionSearchJob?.cancel()
         val generation = ++searchGeneration
         remoteOffset = 0
-        mutableUi.update { it.copy(query = query, searchTracks = emptyList(), searching = query.isNotBlank(), searchError = null, hasMore = false) }
+        mutableUi.update { it.copy(query = query, searchTracks = emptyList(), searchCollections = emptyList(), collectionsLoading = query.isNotBlank(), collectionsError = null, searching = query.isNotBlank(), searchError = null, hasMore = false) }
         if (query.isBlank()) return
+        collectionSearchJob = viewModelScope.launch {
+            delay(400)
+            try {
+                val lists = sources.searchCollections(query.trim())
+                if (generation == searchGeneration) mutableUi.update { it.copy(searchCollections = lists, collectionsLoading = false) }
+                if (lists.isNotEmpty()) library.addSearch(query.trim())
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { if (generation == searchGeneration) mutableUi.update { it.copy(collectionsLoading = false, collectionsError = "Couldn't check albums and official playlists. Retry search.") } }
+        }
         searchJob = viewModelScope.launch {
             delay(250)
             runSearch(query.trim(), generation, append = false)

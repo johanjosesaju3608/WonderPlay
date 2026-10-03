@@ -36,11 +36,11 @@ internal fun Artwork(track: Track?, modifier: Modifier = Modifier, description: 
             val density = androidx.compose.ui.platform.LocalDensity.current
             val pixels = with(density) { maxWidth.toPx() }
             val bucket = when { pixels <= 128 -> 128; pixels <= 256 -> 256; pixels <= 512 -> 512; else -> 1024 }
-            val largeUrl = remember(artwork,bucket) { com.wonderplay.metadata.ArtworkUrls.forSize(artwork,bucket) }
+            val largeUrl = remember(artwork,bucket) { com.wonderplay.metadata.ArtworkUrls.forSize(artwork,bucket,upgradeVideo=true) }
             var useOriginal by remember(artwork,bucket) { mutableStateOf(false) }
             val imageUrl = if(useOriginal) artwork else largeUrl
             val request = remember(imageUrl, reduced, context, bucket) { ImageRequest.Builder(context).data(imageUrl).size(bucket, bucket).crossfade(if (reduced) 0 else 220).build() }
-            AsyncImage(model = request, onError = { if(largeUrl!=artwork) useOriginal=true }, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            AsyncImage(model = request, onError = { if(largeUrl!=artwork) useOriginal=true }, onSuccess = { if (bucket >= 512 && it.result.image.width < 256 && largeUrl != artwork) useOriginal = true }, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }
 }

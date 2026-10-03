@@ -39,7 +39,7 @@ import com.wonderplay.source.LyricsState
 @Composable
 internal fun LyricsPanel(vm: AppViewModel, player: PlayerState) {
     val loaded by vm.lyrics.collectAsStateWithLifecycle()
-    val track = player.current ?: return
+    val track = player.current?.takeIf { it.source != "local" } ?: return
     val state = if (loaded.trackId == track.id) loaded else LyricsState(track.id, loading = true)
     LyricsPanelContent(state, track, player.positionMs, player.isPlaying, vm.player::seekTo, vm.player::togglePlayPause, vm::retryLyrics)
 }
