@@ -60,7 +60,7 @@ internal fun LibraryScreen(vm: AppViewModel, favorites: List<Track>, history: Li
                     item { ActionRow(Icons.Rounded.FileDownload, "Bring your own music", "Choose audio files from your device", onImport) }
                 }
                 "albums", "artists" -> {
-                    val groups = remember(allTracks, route) { allTracks.groupBy { if (route == "albums") it.album.ifBlank { "Singles & unknown albums" } else it.artist }.toSortedMap(String.CASE_INSENSITIVE_ORDER) }
+                    val groups = remember(allTracks, route) { allTracks.groupBy { if (route == "albums") it.album.ifBlank { "Singles & unknown albums" } + " · " + it.artist else it.artist }.toSortedMap(String.CASE_INSENSITIVE_ORDER) }
                     if (groups.isEmpty()) EmptyState("A library that grows with you", "Save a favorite, start a playlist, or import your music to find it here.", Icons.Rounded.Album, "Find music", onSearch)
                     else LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                         items(groups.entries.toList(), key = { it.key }) { group ->

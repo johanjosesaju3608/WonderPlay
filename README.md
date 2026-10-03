@@ -1,64 +1,102 @@
 # wonderPlay
 
-An independent, open-source Android music player under development. Built for personal listening, with a local-first library.
+A quiet, open-source Android music player with real streaming, a local-first library, and a persistent background player. No account wall, advertising SDK, analytics or cloud inference.
 
-> **Incomplete development checkpoint — not a working release.**
-> The project does not currently compile. No APK has been generated or published, and no test suite has passed. This checkpoint preserves the work completed so far without presenting it as a finished application.
+## Install
 
-## What is present
+Download **wonderPlay-1.0.0.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
 
-- Android/Kotlin/Compose project, pinned dependency catalog, Gradle wrapper with verified distribution checksum, manifest and original vector launcher icon.
-- Provider-independent domain models and library/player contracts.
-- Room database, library repository, DataStore preferences and track serialization code.
-- Metadata normalization, music relevance ranking and network-client code.
-- Partial Media3 playback service, stream-resolution layer and track metadata serialization.
-- Compose design system, reusable controls, haptics, library/playlist and discovery screen code.
-- App bootstrap and ViewModel orchestration that reference components still to be implemented.
-- One instrumented playback test source, not yet executed.
-- MIT license, bundled third-party license text, privacy/design notes and build verification script.
+## Music sources
 
-These files are implementation work, **not independently verified finished features**.
+- **Audius:** full-track streaming from publicly available creator uploads. Restricted, deleted and gated entries are excluded. This independent catalog is different from YouTube Music; a particular commercial recording may not be available.
+- **Your files:** choose audio through Android’s file picker. The app retains read access without uploading or copying audio files. Local playback works offline.
+- **YouTube Music:** an explicit search handoff opens its app or website. YouTube audio is not extracted or played inside wonderPlay.
 
-## What remains
+The app is independent and unaffiliated with Audius, YouTube, Google, Apple or Spotify. Upstream availability is not guaranteed. No provider API key or login is required.
 
-1. Implement the source registry, Audius/local providers and artwork resolver.
-2. Implement the MediaController-facing player controller.
-3. Finish the root navigation, Now Playing, queue and settings screens.
-4. Resolve integration errors and obtain a successful full build.
-5. Complete and execute unit, database, playback and Compose tests; run lint.
-6. Inspect real screens and validate playback/background behavior on an emulator/device.
-7. Build and verify a signed release APK, then publish a GitHub release.
+## Features
 
-See [docs/QA.md](docs/QA.md) for the actual validation status and [docs/IMPLEMENTATION_CONTRACT.md](docs/IMPLEMENTATION_CONTRACT.md) for the component interfaces.
+- Dark, light and system appearance; restrained artwork atmosphere, tactile controls and reduced-motion settings.
+- Cancellable, debounced search with local music ranking and duplicate filtering. Results render before artwork loads.
+- Media3 foreground playback, lock-screen/notification/headset controls, audio focus and unplug handling.
+- Persistent mini-player, expanding Now Playing, scrubbing, previous/next, shuffle, repeat, queue reorder/removal and retry.
+- Room-backed favorites, history and playlists with create/rename/delete, add/remove and ordering controls.
+- Artist/album details from provider metadata, plus albums/artists drawn from your actual library.
+- Selected-file import, embedded artwork, offline library metadata, Wi-Fi-only streaming preference, and cache/history clearing.
+- Source artwork with deterministic fallback covers; missing remote artwork can use bounded MusicBrainz/Cover Art Archive matching.
 
-## Intended music-source boundary
+## Screenshots
 
-The design uses publicly streamable Audius tracks and user-selected local files. YouTube Music is intended as an explicit external app/browser handoff, **not in-app YouTube audio extraction**. Anonymous Audius search and a ranged streaming request were checked during development; this does not mean app integration is complete. No API key or cloud inference is planned.
+Real release-build emulator captures are included in [docs/screenshots/](docs/screenshots/).
 
-wonderPlay is unaffiliated with Audius, YouTube, Google, Apple or Spotify. Source availability is not guaranteed, and the Audius catalog is not equivalent to YouTube Music's catalog.
+## Build
 
-## Development setup
-
-JDK 17, Android SDK platform 36 and Build Tools 35.0.0 or later are required. Set `ANDROID_HOME` or supply `sdk.dir` in an untracked `local.properties` file. The wrapper uses Gradle 8.13, with AGP 8.13.2 and Kotlin 2.3.0.
+Use JDK 17, Android SDK platform 36 and Build Tools 35.0.0 or newer. Set `ANDROID_HOME`, or create an untracked `local.properties` containing `sdk.dir=/your/sdk`.
 
 ```sh
-./gradlew :app:compileDebugKotlin
-# Currently expected to fail: required implementation classes are missing.
+git clone https://github.com/johanjosesaju3608/wonderPlay.git
+cd wonderPlay
+./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-After the missing implementations are completed, intended validation commands are:
+Debug APK: `app/build/outputs/apk/debug/app-debug.apk`.
+
+Start an emulator or connect an Android device with USB debugging, then run:
 
 ```sh
-./gradlew testDebugUnitTest lintDebug assembleDebug
 ./gradlew connectedDebugAndroidTest
 ```
 
-The manual-only CI workflow template is saved at `docs/ci/android.yml`. The existing GitHub credential cannot publish workflow files, so it is preserved as a template rather than an active workflow. Once authorized, move it to `.github/workflows/android.yml`.
+Gradle 8.13 (checksum-pinned), AGP 8.13.2 and Kotlin 2.3.0 are a tested compatible toolchain. Dependency versions are centralized in `gradle/libs.versions.toml`.
 
-## Release signing
+## Signed release builds
 
-The release build configuration reads `WONDERPLAY_KEYSTORE`, `WONDERPLAY_KEY_ALIAS`, `WONDERPLAY_STORE_PASSWORD`, and `WONDERPLAY_KEY_PASSWORD` from the environment. Without these, release output is unsigned. The dedicated signing key and credentials are stored privately outside this repository and are **not committed**. They must be preserved to sign compatible future updates.
+Keep the same private release keystore for compatible updates. Never commit the key or passwords.
 
-## License and documentation
+```sh
+export WONDERPLAY_KEYSTORE=/secure/location/wonderplay-release.jks
+export WONDERPLAY_KEY_ALIAS=wonderplay
+export WONDERPLAY_STORE_PASSWORD='your-store-password'
+export WONDERPLAY_KEY_PASSWORD='your-key-password'
+./gradlew testDebugUnitTest lintRelease assembleRelease
+./scripts/verify-apk.sh app/build/outputs/apk/release/app-release.apk
+```
 
-Original code and vector artwork: [MIT](LICENSE). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). [PRIVACY.md](PRIVACY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) describe the intended behavior; they must be checked against the completed implementation before a release.
+Without signing variables, release output is unsigned and cannot be installed. The published APK uses a dedicated release key; a debug APK has a different signature. The release keystore is stored privately outside this repository.
+
+A manual CI workflow template is in `docs/ci/android.yml`. The currently available GitHub credential cannot publish active workflow files. To enable it with an appropriately authorized credential, move the template to `.github/workflows/android.yml`.
+
+## Architecture
+
+| Package | Responsibility |
+| --- | --- |
+| `domain` | Provider-independent models and contracts |
+| `source` | Audius HTTP parsing/routing and selected-file import |
+| `metadata` | Normalization, deterministic ranking, duplicate handling, artwork fallback |
+| `data` | Room transactions, saved queue and DataStore preferences |
+| `player` | Service-owned ExoPlayer, MediaSession, reactive controller, queue and stream resolution |
+| `ui` | Compose design system, screens, sheets and haptics |
+
+The foreground service owns audio; activity recreation does not create another player. Restored queues start paused. Stream resolution runs on the player’s loader thread, outside Compose rendering. Audio is buffered transiently, not saved for offline downloading.
+
+## Privacy
+
+Library metadata and settings stay in private app storage; Android cloud backup is disabled. Audius receives search/track requests. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
+
+## Validation and limits
+
+See [docs/QA.md](docs/QA.md) for executed checks. Galaxy S25-specific haptics, Bluetooth routing, battery behavior and 120 Hz frame pacing require physical-device testing; emulator results do not certify them.
+
+The player streams the source’s available representation without transcoding. No lossless, crossfade or normalization claim is made. Artist/collection views currently load up to 100 tracks. Metadata completeness and artwork availability vary. Remote music needs a connection; Wi-Fi-only applies to playback, not all search/artwork traffic.
+
+## Troubleshooting
+
+- **No search match:** try music available on Audius or import your own file. The search does not use YouTube’s catalog.
+- **Playback unavailable:** check your connection and Wi-Fi-only preference, then retry. Restricted or removed tracks cannot be unlocked by the client.
+- **Local file inaccessible:** reselect a moved/deleted file or renew its document-provider access.
+- **Samsung background interruptions:** check the app’s battery/background restrictions in Android settings.
+- **Signature conflict during install:** an APK signed with another key cannot update this one. Uninstalling the old build removes its local library.
+
+## License
+
+Original app code and vector artwork: [MIT](LICENSE). Music and cover artwork remain owned by their respective rights holders. Dependency notices and bundled license texts are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and the app’s settings.

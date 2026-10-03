@@ -81,6 +81,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 state.copy(searchTracks = (if (append) state.searchTracks + result.tracks else result.tracks).distinctBy { it.id }, searching = false, searchError = null, hasMore = result.hasMore)
             }
             if (!append && result.tracks.isNotEmpty()) library.addSearch(query)
+            for (track in result.tracks.filter { it.artworkUrl == null && it.source != "local" }.take(3)) {
+                val enriched = sources.enrichArtwork(track)
+                if (generation != searchGeneration) return
+                if (enriched.artworkUrl != null) mutableUi.update { it.copy(searchTracks = it.searchTracks.map { old -> if (old.id == enriched.id) enriched else old }) }
+            }
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
             if (generation != searchGeneration) return
@@ -90,10 +95,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleFavorite(track: Track) = mutate { library.toggleFavorite(track) }
-    fun createPlaylist(name: String) = mutate {
+    fun createPlaylist(name: String, firstTrack: Track? = null) = mutate {
         val clean = name.trim().take(80)
         if (clean.isEmpty()) { message("Give your playlist a name."); return@mutate }
-        library.createPlaylist(clean)
+        val id = library.createPlaylist(clean)
+        if (firstTrack != null) library.addToPlaylist(id, firstTrack)
         message("Playlist created")
     }
     fun renamePlaylist(id: Long, name: String) = mutate {
@@ -163,6 +169,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun clearHistory() = mutate { library.clearHistory(); message("Listening history cleared") }
     fun clearSearches() = mutate { library.clearSearches() }
     fun clearArtworkCache() = mutate {
+        sources.clearMetadataCache()
         val loader = getApplication<Application>().imageLoader
         loader.memoryCache?.clear()
         withContext(Dispatchers.IO) { loader.diskCache?.clear() }

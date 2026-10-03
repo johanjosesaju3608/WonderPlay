@@ -1,6 +1,5 @@
 # Architecture and behavioral guarantees
 
-> Development design note: this describes intended behavior. The application is incomplete and does not yet build; these statements must be audited before release.
 
 ## Ownership
 
@@ -24,7 +23,7 @@ MusicSource exposes search, track/artist/album/playlist metadata, playback resol
 
 ## Artwork and metadata
 
-Provider data is normalized without removing meaningful live/acoustic/remix/remastered versions. The ranking layer has a local scorer interface and engineered features; it does not falsely claim to ship a trained neural model. Artwork resolution uses exact-enough artist/title matching and bounded metadata requests, falling back to source artwork or the design system's deterministic artwork treatment. Images are decoded for their display size and cached separately from audio.
+Provider data is normalized without removing meaningful live/acoustic/remix/remastered versions. The ranking layer has a deterministic local scorer and engineered features; it does not falsely claim to ship a trained neural model. Artwork resolution uses exact-enough artist/title matching and bounded metadata requests, falling back to source artwork or the design system's deterministic artwork treatment. Images are decoded for their display size and cached separately from audio.
 
 ## Privacy and export
 

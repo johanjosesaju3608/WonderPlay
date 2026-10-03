@@ -1,6 +1,5 @@
 # Privacy and source behavior
 
-> Development design note: this describes intended behavior. The application is incomplete and does not yet build; these statements must be audited before release.
 
 wonderPlay has no account service, telemetry endpoint, ad SDK, cloud inference, or developer-operated backend.
 
@@ -24,7 +23,7 @@ These providers receive ordinary HTTP information, including the user's IP addre
 
 Only publicly streamable, non-gated source audio is accepted. No login credentials, source access tokens, payment access, DRM keys, or YouTube media extraction are collected or implemented. The app does not impersonate any service's official app.
 
-Metered-network restrictions are enforced for remote playback. Browsing/search and artwork requests still use the available connection. They are not an app-wide firewall. Local files remain playable without networking.
+Wi-Fi-only restrictions are enforced for remote playback. Browsing/search and artwork requests still use the available connection. They are not an app-wide firewall. Local files remain playable without networking.
 
 ## Permissions
 

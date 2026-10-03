@@ -87,6 +87,17 @@ private val WonderTypography = Typography(
 @Composable
 internal fun WonderTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val dark = when (settings.theme) { ThemeMode.DARK -> true; ThemeMode.LIGHT -> false; ThemeMode.SYSTEM -> isSystemInDarkTheme() }
+    val view = androidx.compose.ui.platform.LocalView.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    SideEffect {
+        val activity = context as? android.app.Activity
+        if (activity != null) {
+            val bars = androidx.core.view.WindowCompat.getInsetsController(activity.window, view)
+            bars.isAppearanceLightStatusBars = !dark
+            bars.isAppearanceLightNavigationBars = !dark
+            if (android.os.Build.VERSION.SDK_INT >= 29) activity.window.isNavigationBarContrastEnforced = false
+        }
+    }
     CompositionLocalProvider(LocalReducedMotion provides settings.reducedMotion) {
         MaterialTheme(colorScheme = if (dark) Dark else Light, typography = WonderTypography, content = content)
     }

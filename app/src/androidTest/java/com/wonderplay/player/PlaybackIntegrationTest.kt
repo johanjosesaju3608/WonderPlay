@@ -25,6 +25,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PlaybackIntegrationTest {
     @Test fun localAudioPlaysSeeksPausesAndReportsFailure() {
+        val activity = androidx.test.core.app.ActivityScenario.launch(com.wonderplay.MainActivity::class.java)
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val app = ApplicationProvider.getApplicationContext<WonderPlayApp>()
         val file = File(app.cacheDir, "playback-test.wav")
@@ -66,6 +67,7 @@ class PlaybackIntegrationTest {
         } finally {
             instrumentation.runOnMainSync { controller.stop(); controller.clearMediaItems(); controller.release() }
             file.delete()
+            activity.close()
         }
     }
 

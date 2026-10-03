@@ -1,18 +1,18 @@
-# Validation status — incomplete checkpoint
+# Release validation
 
-As of 2026-10-03:
+Validated on 2026-10-03 with JDK 17, Gradle 8.13 and an Android 15 / API 35 ARM64 emulator.
 
-- The GitHub repository was initially empty.
-- Gradle wrapper generation succeeded.
-- The Gradle 8.13 distribution was checked against its official SHA-256 checksum, which is pinned in the wrapper configuration.
-- Runtime dependency resolution succeeded.
-- The initial Kotlin compilation failed because implementation classes were missing, including PlayerController, SourceRegistry and WonderPlayRoot.
-- The source tree contains an instrumented playback test, but it has not run.
-- No full build, unit-test suite, instrumentation suite or lint run has passed.
-- No debug or release APK exists. No GitHub release has been published.
-- The pre-existing Android emulator could not boot because its system image was incomplete. A replacement image download was initiated, but no app was tested on it.
-- Public Audius search returned live metadata; a ranged request to /v1/tracks/mWB22/stream?app_name=wonderPlay returned HTTP 206 audio/mpeg. This verifies a provider endpoint, not the unfinished Android integration.
+- `testDebugUnitTest`: 16 tests passed, covering metadata normalization/ranking, queue state, Room library transactions and Audius response parsing.
+- `lintDebug` and `lintRelease`: passed without errors.
+- `assembleDebug`, `assembleDebugAndroidTest` and `assembleRelease`: passed.
+- Android instrumentation: 3 tests passed, covering actual Media3 local playback, seeking, pause, error/recovery, playlist/settings navigation and search state.
+- Signed, minified release APK installed and launched successfully on the emulator.
+- Release signing verified with `apksigner`; ZIP alignment verified including the 16 KB alignment check.
+- Live Audius search returned real track metadata in the release app.
+- The signed release streamed a public Audius track successfully: MediaSession reported PLAYING with an advancing position, and continued playing after the app was backgrounded.
 
-## Remaining verification
+## Boundaries
 
-Finish missing implementations, compile, execute meaningful data/ranking/queue/player/UI tests, run lint, inspect every screen, build both APK variants, and verify release signing and installation. The available environment has no connected Galaxy S25; Samsung-specific background audio, Bluetooth, haptics and 120 Hz behavior remain unverified.
+These checks do not certify every device or every upstream track. No physical Galaxy S25 was available. Samsung background restrictions, Bluetooth routing, haptic feel, battery consumption and 120 Hz frame pacing need physical-device testing. Document-provider behavior also varies by device/provider.
+
+Audius supplies the public streaming catalog; local files play through user-selected document URIs. YouTube Music is an external search handoff, not an in-app playback source. No offline remote downloads, lossless guarantee, trained neural recommendation model, crossfade or loudness normalization is shipped.

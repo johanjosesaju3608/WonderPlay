@@ -28,12 +28,15 @@ import com.wonderplay.domain.Track
 
 @Composable
 internal fun Artwork(track: Track?, modifier: Modifier = Modifier, description: String? = null, artwork: String? = track?.artworkUrl, seed: String = track?.id.orEmpty()) {
-    Box(modifier.clip(Shape.artwork)) {
+    BoxWithConstraints(modifier.clip(Shape.artwork)) {
         ArtFallback(seed, Modifier.matchParentSize())
         if (!artwork.isNullOrBlank()) {
             val context = LocalContext.current
             val reduced = LocalReducedMotion.current
-            val request = remember(artwork, reduced, context) { ImageRequest.Builder(context).data(artwork).crossfade(if (reduced) 0 else 220).build() }
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val pixels = with(density) { maxWidth.toPx() }
+            val bucket = when { pixels <= 128 -> 128; pixels <= 256 -> 256; pixels <= 512 -> 512; else -> 1024 }
+            val request = remember(artwork, reduced, context, bucket) { ImageRequest.Builder(context).data(artwork).size(bucket, bucket).crossfade(if (reduced) 0 else 220).build() }
             AsyncImage(model = request, contentDescription = description, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
     }

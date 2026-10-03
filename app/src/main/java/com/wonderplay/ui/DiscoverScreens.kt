@@ -129,7 +129,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                 } else item { EmptyState("Follow your curiosity", "Search independent music on Audius. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
             } else {
                 if (tracks.isNotEmpty()) {
-                    item { Text("${tracks.size}${if (hasMore) "+" else ""} TRACKS · AUDIUS", style = MaterialTheme.typography.labelSmall,
+                    item { Text("${tracks.size}${if (hasMore) "+" else ""} TRACKS", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.page, vertical = 20.dp)) }
                     items(tracks, key = { it.id }) { track -> TrackRow(track,
                         { keyboard?.hide(); focusManager.clearFocus(); vm.player.play(tracks, tracks.indexOf(track)) }, { keyboard?.hide(); onMenu(track) },
