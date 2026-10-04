@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 
 /** Presentation state contains only metadata; audio lifecycle belongs to the service. */
@@ -34,6 +35,13 @@ data class UiState(
     val featured: List<MusicCollection> = emptyList(),
     val featuredLoading: Boolean = false,
     val featuredError: String? = null,
+    val charts: List<MusicCollection> = emptyList(),
+    val chartsLoading: Boolean = false,
+    val chartsError: String? = null,
+    val recommendations: List<Track> = emptyList(),
+    val recommendationsLoading: Boolean = false,
+    val recommendationsError: String? = null,
+    val personalized: Boolean = false,
     val message: String? = null,
 )
 
@@ -53,6 +61,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val lyricsRepository = LyricsRepository()
     private val mutableLyrics = MutableStateFlow(LyricsState())
     val lyrics = mutableLyrics.asStateFlow()
+    private var discoveryRequested = false
+    private var discoverySignature: String? = null
+    private var chartsLoadedAt = 0L
+    private var chartsJob: Job? = null
+    private var recommendationsJob: Job? = null
     private var lyricsJob: Job? = null
     private var featuredJob: Job? = null
     private var collectionSearchJob: Job? = null
@@ -65,11 +78,58 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         player.connect()
         loadFeatured()
         viewModelScope.launch {
+            combine(history, favorites) { h, f -> h to f }.collect { (h, f) ->
+                if (discoveryRequested) loadRecommendations(h, f)
+            }
+        }
+        viewModelScope.launch {
             player.state.map { it.current }.distinctUntilChangedBy { it?.id }.collect { track ->
                 lyricsJob?.cancel()
                 mutableLyrics.value = LyricsState(track?.id)
                 if (track != null && track.source != "local") loadLyrics(track)
             }
+        }
+    }
+
+    fun loadDiscovery(force: Boolean = false) {
+        discoveryRequested = true
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (chartsJob?.isActive != true && (force || mutableUi.value.charts.isEmpty() || now - chartsLoadedAt > 600_000)) {
+            mutableUi.update { it.copy(chartsLoading = true, chartsError = null) }
+            chartsJob = viewModelScope.launch {
+                try {
+                    val charts = sources.charts()
+                    chartsLoadedAt = android.os.SystemClock.elapsedRealtime()
+                    mutableUi.update { it.copy(charts = charts, chartsLoading = false) }
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { mutableUi.update { it.copy(chartsLoading = false, chartsError = "Couldn't load charts. Check your connection and retry.") } }
+            }
+        }
+        loadRecommendations(history.value, favorites.value, force)
+    }
+    private fun loadRecommendations(h: List<Track>, f: List<Track>, force: Boolean = false) {
+        val signature = h.joinToString { it.id } + "|" + f.joinToString { it.id }
+        if (!force && signature == discoverySignature) return
+        discoverySignature = signature
+        recommendationsJob?.cancel()
+        val seeds = Recommendations.seeds(h, f)
+        mutableUi.update { it.copy(recommendations = emptyList(), recommendationsLoading = true, recommendationsError = null, personalized = seeds.isNotEmpty()) }
+        recommendationsJob = viewModelScope.launch {
+            try {
+                val candidates = kotlinx.coroutines.coroutineScope {
+                    (seeds.map { it.artist } .ifEmpty { listOf("top songs") }).map { query ->
+                        async {
+                            try { sources.discoverSongs(query) }
+                            catch (cancelled: CancellationException) { throw cancelled }
+                            catch (_: Exception) { emptyList() }
+                        }
+                    }.map { it.await() }.flatten()
+                }
+                val tracks = withContext(Dispatchers.Default) { Recommendations.rank(candidates, h, f) }
+                mutableUi.update { it.copy(recommendations = tracks, recommendationsLoading = false,
+                    recommendationsError = if(tracks.isEmpty()) "No new recommendations right now. Try again after listening to more music." else null) }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { mutableUi.update { it.copy(recommendationsLoading = false, recommendationsError = "Couldn't load recommendations. Try again.") } }
         }
     }
 

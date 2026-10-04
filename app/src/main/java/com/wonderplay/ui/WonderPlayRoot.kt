@@ -1,5 +1,10 @@
 package com.wonderplay.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -24,6 +29,11 @@ import com.wonderplay.AppViewModel
 import com.wonderplay.domain.*
 import com.wonderplay.source.YouTubeMusicSource
 
+private data class Page(val tab: String, val settings: Boolean, val detailOpen: Boolean, val detail: MusicCollection?, val library: String) {
+    val key get() = when { settings -> "settings"; detailOpen -> "detail"; tab == "Library" -> "Library:$library"; else -> tab }
+    val order get() = when { settings || detailOpen -> 20; tab == "Library" && library != "all" -> 10; else -> listOf("Home", "Search", "Library").indexOf(tab) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WonderPlayRoot(viewModel:AppViewModel) {
@@ -45,13 +55,15 @@ fun WonderPlayRoot(viewModel:AppViewModel) {
     var addTrack by remember { mutableStateOf<Track?>(null) }
     var collection by remember { mutableStateOf<MusicCollection?>(null) }
     var newPlaylist by remember { mutableStateOf(false) }
+    val focusManager=LocalFocusManager.current
+    val keyboard=LocalSoftwareKeyboardController.current
     val context=LocalContext.current
     val view=LocalView.current
     val haptics=remember(view,settings.haptics) { HapticsController(view,settings.haptics) }
     val snackbar=remember { SnackbarHostState() }
     val picker=rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { vm.importLocal(it) }
     val import={ picker.launch(arrayOf("audio/*")) }
-    val search={ tab="Search"; libraryRoute="all"; collection=null; vm.closeDetail() }
+    val search={ vm.search(""); tab="Search"; libraryRoute="all"; collection=null; vm.closeDetail() }
     fun open(uri:Uri) { try { context.startActivity(Intent(Intent.ACTION_VIEW,uri)) } catch(_:android.content.ActivityNotFoundException) { Toast.makeText(context,"No app can open this link.",Toast.LENGTH_SHORT).show() } }
     LaunchedEffect(ui.message) { ui.message?.let { snackbar.showSnackbar(it); vm.dismissMessage() } }
     LaunchedEffect(player.current) { if(player.current==null) { expanded=false; queue=false } }
@@ -64,20 +76,27 @@ fun WonderPlayRoot(viewModel:AppViewModel) {
             Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.background) {
                 Box(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
                     Column(Modifier.fillMaxSize()) {
-                        Box(Modifier.weight(1f)) {
+                        val page = Page(tab, showSettings, detail != null || ui.detailLoading, detail, libraryRoute)
+                        AnimatedContent(page, modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(), contentKey = { it.key },
+                            transitionSpec = {
+                                val duration = if(settings.reducedMotion) 0 else 240
+                                val direction = if(targetState.order >= initialState.order) 1 else -1
+                                (slideInHorizontally(tween(duration)) { direction * it / 6 } + fadeIn(tween(duration))) togetherWith
+                                    (slideOutHorizontally(tween(duration)) { -direction * it / 6 } + fadeOut(tween(duration)))
+                            }, label = "Page transition") { shown ->
                             when {
-                                showSettings -> SettingsScreen(settings,vm) { showSettings=false }
-                                detail!=null -> CollectionScreen(detail,vm,{ collection=null; vm.closeDetail() },{ menu=it },player.current?.id)
-                                ui.detailLoading -> Column { ScreenHeader("Opening music",onBack=vm::closeDetail); LinearProgressIndicator(Modifier.fillMaxWidth().padding(Space.page)) }
-                                tab=="Home" -> HomeScreen(vm,history,favorites,locals,search,import,{showSettings=true},{libraryRoute=it;tab="Library"},{menu=it},player.current?.id)
-                                tab=="Search" -> SearchScreen(vm,ui.query,ui.searchTracks,ui.searching,ui.searchError,ui.hasMore,recent,favorites,player.current?.id,{menu=it},{open(YouTubeMusicSource.searchUrl(it))})
-                                else -> LibraryScreen(vm,favorites,history,locals,playlists,libraryRoute,{libraryRoute=it},import,search,{collection=it},{menu=it},player.current?.id)
+                                shown.settings -> SettingsScreen(settings,vm) { showSettings=false }
+                                shown.detailOpen -> shown.detail?.let { CollectionScreen(it,vm,{ collection=null; vm.closeDetail() },{ menu=it },player.current?.id) }
+                                    ?: Column { ScreenHeader("Opening music",onBack=vm::closeDetail); LinearProgressIndicator(Modifier.fillMaxWidth().padding(Space.page)) }
+                                shown.tab=="Home" -> HomeScreen(vm,history,favorites,locals,search,import,{showSettings=true},{libraryRoute=it;tab="Library"},{menu=it},player.current?.id)
+                                shown.tab=="Search" -> SearchScreen(vm,ui.query,ui.searchTracks,ui.searching,ui.searchError,ui.hasMore,recent,favorites,player.current?.id,{menu=it},{open(YouTubeMusicSource.searchUrl(it))})
+                                else -> LibraryScreen(vm,favorites,history,locals,playlists,shown.library,{libraryRoute=it},import,search,{collection=it},{menu=it},player.current?.id)
                             }
                         }
                         if(player.current!=null) Spacer(Modifier.height(84.dp))
                         Spacer(Modifier.height(88.dp))
                     }
-                    FloatingNavigation(tab, { label -> haptics.perform(HapticEvent.SELECT); tab=label; showSettings=false; collection=null; vm.closeDetail() }, Modifier.align(Alignment.BottomCenter))
+                    FloatingNavigation(tab, { label -> focusManager.clearFocus(); keyboard?.hide(); haptics.perform(HapticEvent.SELECT); if(label=="Search" && tab!="Search") vm.search(""); tab=label; showSettings=false; collection=null; vm.closeDetail() }, Modifier.align(Alignment.BottomCenter))
                     player.current?.let { PlayerSurface(player,vm,expanded,{expanded=it},favorites.any { t->t.id==it.id },{vm.toggleFavorite(it)},{queue=true},{menu=it}) }
                     SnackbarHost(snackbar,Modifier.align(Alignment.BottomCenter).padding(bottom=if(player.current!=null) 152.dp else 72.dp))
                 }

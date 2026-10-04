@@ -22,12 +22,19 @@ class AppFlowTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithText("Color style").assertIsDisplayed()
     }
-    @Test fun searchFocusClearAndRotate() {
+    @Test fun searchDiscoveryOnlyFocusesWhenTappedAndClearsOnNavigation() {
         compose.onNodeWithContentDescription("Search",useUnmergedTree=true).performClick()
+        compose.onNodeWithContentDescription("Search music").assertIsNotFocused()
+        compose.onNodeWithText("Charts & top songs").assertExists()
+        compose.onNodeWithContentDescription("Search music").performClick().assertIsFocused()
         compose.onNodeWithContentDescription("Search music").performTextInput("no-such-song-test")
         compose.onNodeWithContentDescription("Clear search").performClick()
         compose.onNodeWithContentDescription("Search music").assert(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.EditableText, androidx.compose.ui.text.AnnotatedString("")))
+        compose.onNodeWithContentDescription("Search music").assertIsNotFocused()
+        compose.onNodeWithContentDescription("Library",useUnmergedTree=true).performClick()
+        compose.onNodeWithContentDescription("Search",useUnmergedTree=true).performClick()
+        compose.onNodeWithContentDescription("Search music").assertIsNotFocused()
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithContentDescription("Search music").assertExists()
+        compose.onNodeWithContentDescription("Search music").assertExists().assertIsNotFocused()
     }
 }

@@ -121,7 +121,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    LaunchedEffect(Unit) { focus.requestFocus(); keyboard?.show() }
+    LaunchedEffect(Unit) { vm.loadDiscovery() }
     Column {
         ScreenHeader("Search", "Find a sound that stays with you")
         Row(Modifier.padding(horizontal = Space.page).padding(bottom = 8.dp).fillMaxWidth().heightIn(min = 56.dp)
@@ -133,7 +133,7 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide(); focusManager.clearFocus() }),
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 16.dp).focusRequester(focus).semantics { contentDescription = "Search music" },
                 decorationBox = { inner -> Box { if (query.isEmpty()) Text("Songs, artists, a feeling…", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant); inner() } })
-            if (query.isNotEmpty()) TactileIcon(Icons.Rounded.Close, "Clear search", { vm.search(""); focus.requestFocus(); keyboard?.show() })
+            if (query.isNotEmpty()) TactileIcon(Icons.Rounded.Close, "Clear search", { vm.search(""); keyboard?.hide(); focusManager.clearFocus() })
             else Spacer(Modifier.width(16.dp))
         }
         if (searching) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp).padding(horizontal = Space.page), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.surface)
@@ -142,8 +142,37 @@ internal fun SearchScreen(vm: AppViewModel, query: String, tracks: List<Track>, 
             if (query.isBlank()) {
                 if (recent.isNotEmpty()) {
                     item { Spacer(Modifier.height(12.dp)); SectionHeading("Recent searches", action = "Clear", onAction = vm::clearSearches) }
-                    items(recent, key = { it }) { term -> ActionRow(Icons.Rounded.History, term) { vm.search(term) } }
-                } else item { EmptyState("Follow your curiosity", "Search YouTube Music. Your recent searches will stay here, just on this device.", Icons.Rounded.Search) }
+                    item {
+                        LazyRow(contentPadding = PaddingValues(horizontal = Space.page), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(recent, key = { it }) { term ->
+                                SuggestionChip(modifier = Modifier.widthIn(max = 220.dp), onClick = { keyboard?.hide(); focusManager.clearFocus(); vm.search(term) }, label = { Text(term, maxLines = 1) }, shape = androidx.compose.foundation.shape.CircleShape)
+                            }
+                        }
+                    }
+                }
+                item { SectionHeading("Charts & top songs", "Official YouTube Music playlists") }
+                if(searchUi.chartsLoading && searchUi.charts.isEmpty()) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(Space.page)) }
+                searchUi.chartsError?.let { message -> item { FailureState(message, { vm.loadDiscovery(true) }) } }
+                items(searchUi.charts.chunked(2), key = { row -> "charts:" + row.first().id }) { row ->
+                    Row(Modifier.fillMaxWidth().padding(horizontal = Space.page, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        row.forEach { list ->
+                            Surface(onClick = { keyboard?.hide(); focusManager.clearFocus(); vm.openPlaylist(list) }, modifier = Modifier.weight(1f), shape = Shape.artwork, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Artwork(Track("chart:${list.id}", list.title, "YouTube Music", artworkUrl = list.artworkUrl), Modifier.fillMaxWidth().aspectRatio(1.6f).clip(Shape.control), "Open ${list.title}")
+                                    Text(list.title, Modifier.padding(top = 10.dp).heightIn(min = 40.dp), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                }
+                            }
+                        }
+                        if(row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+                item { Spacer(Modifier.height(16.dp)); SectionHeading(if(searchUi.personalized) "Made for your listening" else "Discover a new favorite",
+                    if(searchUi.personalized) "Inspired by your recent plays and favorites" else "Listen to a few songs to make this yours") }
+                if(searchUi.recommendationsLoading) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(Space.page)) }
+                searchUi.recommendationsError?.let { message -> item { FailureState(message, { vm.loadDiscovery(true) }) } }
+                items(searchUi.recommendations, key = { "recommendation:${it.id}" }) { track ->
+                    TrackRow(track, { vm.player.play(searchUi.recommendations, searchUi.recommendations.indexOf(track)) }, { onMenu(track) }, current = track.id == currentId, favorite = favorites.any { it.id == track.id })
+                }
             } else {
                 if (searchUi.searchCollections.isNotEmpty()) {
                     item { SectionHeading("Albums & official playlists") }

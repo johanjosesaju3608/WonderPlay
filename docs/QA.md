@@ -1,4 +1,17 @@
-# wonderPlay 1.0.4 validation
+# wonderPlay 1.0.5 validation
+
+- 40 unit tests passed, including recommendation recency/favorite weighting, local-file exclusion, artist diversity, deduplication, whole-name artist matching and exclusion of alternate uploads of known recordings.
+- 10 Android 15 emulator tests passed. Search opens unfocused, tapping the field focuses it, clearing hides focus, and returning to Search or rotating does not focus the field. Settings/library/playlist creation, playback, shuffle, player expansion, mini-player gestures and lyrics remain covered.
+- Debug and release lint passed. The final signed APK passed signature and 16 KB alignment checks; versionCode is 6 and versionName is 1.0.5. The release key is unchanged and update installation over 1.0.4 succeeded.
+- Live signed-release discovery loaded four official cards, including Trending 20 India and Daily Top Music Videos - India, alongside featured song playlists. Trending 20 India opened with 20 playable tracks. Keyboard state was checked before and after explicitly tapping the search field.
+- Favoriting a Daft Punk track produced actual new Daft Punk recommendations. Recent searches appeared as pills. Discovery and personalized-screen screenshots were inspected.
+- A focused read-only code review found no significant blockers. Recommendation extraction does not modify the user's search continuation cursor; ranking runs away from the UI thread. Chart data is cached for ten minutes. Reduced motion disables page slides/fades.
+
+## Recommendation behavior
+
+Artist affinity is computed on-device from recent remote listening (with recency weights) and favorites. Up to three artist searches supply candidates, with up to four unheard tracks per artist and twelve total. Known recording uploads are filtered while distinct versions remain eligible. Imported local-file metadata is excluded. A new listener receives starter discovery results. Recommendations are not a signed-in YouTube personalized feed and use no cloud inference. Source availability affects discovery; failures have retry controls.
+
+## wonderPlay 1.0.4 validation
 
 - 34 unit tests passed: metadata/ranking, queue state, Room persistence, expansion bounds, dynamic-color contrast, high-resolution artwork URLs, system artwork metadata, lyric parsing/timing/matching and featured playlist/song parsing.
 - 10 Android 15 emulator tests passed: playback/seek/pause/error recovery, library/settings/search flows, mini-player gestures, repeated expansion/recreation, four-line lyrics preview/full-screen opening, lyric-line seeking, plain lyrics and unavailable-lyrics states.

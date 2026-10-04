@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -29,7 +30,7 @@ internal fun FloatingNavigation(tab: String, onSelect: (String) -> Unit, modifie
                 val active = tab == label
                 val weight by animateFloatAsState(if(active) 1.6f else 1f, tween(if(reduced) 0 else 230), label = "Navigation pill")
                 val color by animateColorAsState(if(active) MaterialTheme.colorScheme.primary.copy(alpha = .18f) else androidx.compose.ui.graphics.Color.Transparent, tween(if(reduced) 0 else 230), label = "Navigation color")
-                Surface(Modifier.weight(weight).fillMaxHeight().semantics { selected = active; contentDescription = label }.clickable(role = Role.Tab) { onSelect(label) }, shape = CircleShape, color = color) {
+                Surface(Modifier.weight(weight).fillMaxHeight().clip(CircleShape).semantics { selected = active; contentDescription = label }.clickable(role = Role.Tab) { onSelect(label) }, shape = CircleShape, color = color) {
                     Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                         Icon(icon, null, Modifier.size(23.dp), tint = if(active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                         if(active) { Spacer(Modifier.width(8.dp)); Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, maxLines = 1) }

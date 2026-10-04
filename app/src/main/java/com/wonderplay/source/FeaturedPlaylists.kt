@@ -17,6 +17,18 @@ class FeaturedPlaylists(private val http: SourceHttpClient = SourceHttpClient())
         val response = http.text("https://music.youtube.com/youtubei/v1/browse".toHttpUrl(), body) ?: throw SourceException("Featured playlists are unavailable. Try again.")
         return parse(JSONObject(response)).ifEmpty { throw SourceException("YouTube Music didn't return featured playlists. Try again later.") }
     }
+    suspend fun charts(): List<MusicCollection> {
+        val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", "1.20260930.01.00").put("hl", "en").put("gl", Locale.getDefault().country.takeIf { it.length == 2 } ?: "US")
+        val body = JSONObject().put("context", JSONObject().put("client", client)).put("browseId", "FEmusic_charts")
+        val response = http.text("https://music.youtube.com/youtubei/v1/browse".toHttpUrl(), body)
+        // The official Charts feed also uses PL/OLAK IDs; only this trusted feed may supply them.
+        val charts = response?.let { parse(JSONObject(it)) }.orEmpty().filter { it.subtitle.contains("YouTube Charts", true) }.take(2)
+        val topSongs = try { search("Top songs").take(2) }
+        catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+        catch (_: SourceException) { emptyList() }
+        return (charts + topSongs).distinctBy { it.id }
+            .ifEmpty { throw SourceException("Charts are unavailable. Try again later.") }
+    }
     suspend fun search(query: String): List<MusicCollection> {
         val client = JSONObject().put("clientName", "WEB_REMIX").put("clientVersion", "1.20260930.01.00").put("hl", "en").put("gl", Locale.getDefault().country.takeIf { it.length == 2 } ?: "US")
         // Dedicated featured-playlist filter; the generic playlists filter returns community lists.

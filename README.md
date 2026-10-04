@@ -6,7 +6,15 @@ A quiet, open-source Android music player with real streaming, a local-first lib
 
 ## Install
 
-Download **wonderPlay-1.0.4.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+Download **wonderPlay-1.0.5.apk** from [Releases](https://github.com/johanjosesaju3608/wonderPlay/releases). Android 8.0 (API 26) or newer is supported. The app targets Android 16 (API 36), and the universal APK supports modern Samsung Galaxy devices, including the S25. Android may ask you to allow installation from your browser or file manager.
+
+## New in 1.0.5
+
+- Navigation tap feedback stays within its rounded pill. Gentle directional slide/fade transitions connect tabs, settings and collection pages; reduced motion disables them.
+- Search opens to discovery without opening the keyboard. Tap the search field to type; recent searches appear as compact pills.
+- Official YouTube Music charts and top-song playlists appear as rounded, two-column cards.
+- Song suggestions use recent listening and favorite artists to find unheard tracks, with artist variety. New listeners get a starter discovery selection. Local-file metadata is excluded from recommendation requests.
+- Discovery requests are independent from search pagination; chart results are cached for ten minutes and recommendations refresh when listening history or favorites change.
 
 ## New in 1.0.4
 
@@ -99,7 +107,7 @@ The foreground service owns audio; activity recreation does not create another p
 
 ## Privacy
 
-Library metadata and settings stay in private app storage; Android cloud backup is disabled. YouTube/Google receives search/track/stream and featured-playlist requests. LRCLIB and lyrics.ovh receive song metadata for lyrics lookup. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
+Library metadata and settings stay in private app storage; Android cloud backup is disabled. YouTube/Google receives search/track/stream, charts, featured-playlist and recommendation artist-search requests. LRCLIB and lyrics.ovh receive song metadata for lyrics lookup. Artwork comes from provider hosts, with MusicBrainz/Cover Art Archive fallback for missing remote artwork. Providers receive ordinary network metadata such as your IP address. There is no developer-operated backend. See [PRIVACY.md](PRIVACY.md).
 
 ## Validation and limits
 

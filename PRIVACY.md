@@ -34,3 +34,5 @@ Wi-Fi-only restrictions are enforced for remote playback. Browsing/search, lyric
 - Vibration: optional tactile feedback.
 
 There is no microphone, camera, location, contacts, phone state, broad file access or advertising ID permission. Media-session notifications use Android's media notification handling without an unrelated onboarding permission wall.
+
+Recommendations rank music on your device using recent remote listening and favorites. Up to three preferred artist names are sent to YouTube Music to find new songs. Local-file metadata is excluded. There is no cloud inference or developer recommendation backend. Charts and starter discovery also use anonymous YouTube Music requests.

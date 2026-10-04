@@ -45,6 +45,12 @@ class YouTubeMusicSource : MusicSource {
             SearchResult(page.items.filterIsInstance<StreamInfoItem>().mapNotNull(::track), page.hasNextPage())
         }
     }
+    // Discovery never changes the continuation cursor used by the user's search.
+    suspend fun discoverSongs(query: String): List<Track> = extract {
+        val extractor = ServiceList.YouTube.getSearchExtractor(query.take(200), listOf(YoutubeSearchQueryHandlerFactory.MUSIC_SONGS), "")
+        extractor.fetchPage()
+        extractor.initialPage.items.filterIsInstance<StreamInfoItem>().mapNotNull(::track)
+    }
     suspend fun searchCollections(query: String): List<MusicCollection> {
         var albumError: SourceException? = null
         val albums = try { extract {
